@@ -2,14 +2,14 @@ package husacct.analyse.task.reconstruct;
 
 import java.util.ArrayList;
 
-public class PatternMapper {
+public class MappingGenerator {
 	private static int Slots;
 	private static String[] PackageList;
 	private static ArrayList<ArrayList<String>> permutations = new ArrayList<ArrayList<String>>();
 	
-	public PatternMapper(int i, String[] packageList) {
-		setSlots(i);
-		setPackageList(packageList);
+	public MappingGenerator(int numberOfModules, String[] packageList) {
+		Slots = numberOfModules;
+		PackageList = packageList;
 	}
 	
 	private static void addToPermutations(ArrayList<ArrayList<Integer>> arrayList) {
@@ -39,25 +39,9 @@ public class PatternMapper {
 		return packageNumbers;
 	}
 	
-	public static int getSlots() {
-		return Slots;
-	}
-	
-	private void setSlots(int slots) {
-		Slots = slots;
-	}
-	
-	public String[] getPackageList() {
-		return PackageList;
-	}
-	
-	private void setPackageList(String[] packageList) {
-		PackageList = packageList;
-	}
-	
 	private void combine(int[] packageNumbers) {
-		int[] combinations = new int[getSlots()];
-		combineRecursive(packageNumbers, combinations, 0, 0, getSlots());
+		int[] combinations = new int[Slots];
+		combineRecursive(packageNumbers, combinations, 0, 0, Slots);
 	}
 	
 	private static void combineRecursive(int[] array, int[] result, int currentIndex, int level, int r) {

@@ -1,33 +1,35 @@
 package husacct.analyse.task.reconstruct;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.TreeMap;
+
+import javax.swing.JDialog;
 
 import org.apache.log4j.Logger;
 
 import husacct.ServiceProvider;
 import husacct.analyse.IAnalyseService;
 import husacct.analyse.domain.IModelQueryService;
-import husacct.common.dto.ModuleDTO;
 import husacct.common.dto.RuleDTO;
 import husacct.common.dto.SoftwareUnitDTO;
 import husacct.define.DomainToDtoParser;
 import husacct.define.IDefineService;
 import husacct.define.domain.module.ModuleStrategy;
-import husacct.define.domain.services.ModuleDomainService;
 import husacct.validate.IValidateService;
 
 public class ReconstructArchitecture {
-	
 	private final Logger logger = Logger.getLogger(ReconstructArchitecture.class);
 	private IModelQueryService queryService;
 	private IDefineService defineService;
-	
+	private IValidateService validateService;
 	private ArrayList<SoftwareUnitDTO> internalRootPackagesWithClasses; // The first packages (starting from the project root) that contain one or
 																		// more classes.
-	private ArrayList<SoftwareUnitDTO> unitsMappedToPatternElements; // Software Unit DTOs mapped to modules within the architectural pattern.
 	// External system variables
 	private String xLibrariesRootPackage = "xLibraries";
 	private ArrayList<SoftwareUnitDTO> xLibrariesMainPackages = new ArrayList<SoftwareUnitDTO>();
@@ -39,32 +41,115 @@ public class ReconstructArchitecture {
 	public ReconstructArchitecture(IModelQueryService queryService) {
 		this.queryService = queryService;
 		defineService = ServiceProvider.getInstance().getDefineService();
-		IValidateService validateService = ServiceProvider.getInstance().getValidateService();
 		identifyExternalSystems();
-		// identifyLayers();
+		determineInternalRootPackagesWithClasses();
+		
+		String pattern = "MVC";
+		int numberOfLayers = 3; // Only matters for n-layered patterns.
+		
 		logger.info("Number of rules before applying patterns: " + defineService.getDefinedRules().length);
-		createPattern("MVC"); 
+		Pattern currentPattern = null;
+		switch (pattern) {
+			case "layered":
+				currentPattern = new LayeredPattern(numberOfLayers);
+				currentPattern.insertPattern();
+				break;
+			case "MVC":
+				currentPattern = new MVCPattern();
+				currentPattern.insertPattern();
+				break;
+			case "Broker":
+				currentPattern = new BrokerPattern();
+				currentPattern.insertPattern();
+				break;
+		}
 		logger.info("Number of rules after applying patterns: " + defineService.getDefinedRules().length);
 		
-		// TODO: Replace temporary mapping with automated mapping loop that applies to all patterns.
-		try {
-			determineInternalRootPackagesWithClasses();
-			unitsMappedToPatternElements = new ArrayList<SoftwareUnitDTO>();
-			ArrayList<SoftwareUnitDTO> temp = new ArrayList<SoftwareUnitDTO>();
-			for (int i = 1; i < 4; i++) {
-				temp.add(internalRootPackagesWithClasses.get(i - 1));
-				defineService.editModule("Layer" + i, "Layer" + i, i, temp);
-				unitsMappedToPatternElements.addAll(temp);
-				temp.clear();
-			}
-			logger.info("Software units successfully mapped to pattern elements");
-		} catch (Exception e) {
-			logger.info("Failed to map a software unit to a pattern element. ");
+		if (currentPattern != null) {
+			attemptPatternCandidates(pattern, currentPattern);
 		}
+	}
+	
+	private void attemptPatternCandidates(String pattern, Pattern currentPattern) {
+		int numberOfTopCandidates = 10;
+		JDialog dialog = new JDialog();
+		dialog.setSize(100, 50);
+		dialog.setTitle("Working...");
+		dialog.setAlwaysOnTop(true);
+		dialog.setVisible(true);
+		// Temporary dialogue window to indicate reconstruction is busy. TO BE REPLACED!
+		String[] patternUnitNames = new String[internalRootPackagesWithClasses.size()];
+		for (int i = 0; i < patternUnitNames.length; i++)
+			patternUnitNames[i] = internalRootPackagesWithClasses.get(i).uniqueName;
+		MappingGenerator mapgen = new MappingGenerator(currentPattern.getNumberOfModules(), patternUnitNames);
+		String[][] patternNames = mapgen.getPermutations();
+		float[][] candidateScores = new float[numberOfTopCandidates][2];
+		float fitness = 0;
+		float lowestTopFitness = 0;
+		validateService = ServiceProvider.getInstance().getValidateService();
+		Instant start = Instant.now();
+		for (int i = 0; i < patternNames.length; i++) {
+			currentPattern.mapPattern(patternNames[i]);
+			fitness = determineFitness(validatePatternCandidate(patternNames[i]));
+			if (i > numberOfTopCandidates - 1) {
+				if (fitness > lowestTopFitness) {
+					candidateScores[0][0] = fitness;
+					candidateScores[0][1] = i;
+					sortCandidates(candidateScores);
+				}
+			} else if (i == numberOfTopCandidates - 1) {
+				candidateScores[1][0] = fitness;
+				candidateScores[1][1] = i;
+				sortCandidates(candidateScores);
+				lowestTopFitness = candidateScores[1][0];
+			} else {
+				candidateScores[numberOfTopCandidates - 1 - i][0] = fitness;
+				candidateScores[numberOfTopCandidates - 1 - i][1] = i;
+			}
+		}
+		Instant end = Instant.now();
+		dialog.setVisible(false);
+		logger.info("Done \n");
+		logger.info("ALL CANDIDATE PATTERNS HAVE BEEN VALIDATED FOR ONE ARCHITECTURAL PATTERN IN THE PROVIDED PACKAGE DEFINITIONS.");
+		if (pattern == "layered")
+			logger.info("Selected architectural pattern: " + currentPattern.getNumberOfModules() + " " + pattern);
+		else
+			logger.info("Selected architectural pattern: " + pattern);
+		logger.info("Number of software units to map to the pattern: " + internalRootPackagesWithClasses.size());
+		logger.info("This results in " + patternNames.length + " mappings to test.");
+		logger.info("Time needed to map, validate and score all pattern candidates: " + Duration.between(start, end).getSeconds() + " seconds.");
+		logger.info("Best " + numberOfTopCandidates + " candidates: ");
+		for (int i = 0; i < numberOfTopCandidates; i++) {
+			logger.info("Fitness score: " + candidateScores[i][0] + ". Mapped software units unique names: "
+					+ Arrays.deepToString(patternNames[(int) candidateScores[i][1]]));
+		}
+		currentPattern.mapPattern(patternNames[(int) candidateScores[numberOfTopCandidates - 1][1]]);
+		logger.info("This last mapping was selected for the intended architecture by default.");
+	}
+	
+	private void sortCandidates(float[][] candidateScores) {
+		Arrays.sort(candidateScores, new Comparator<float[]>() {
+			
+			@Override
+			public int compare(float[] o1, float[] o2) {
+				float fitness1 = o1[0];
+				float fitness2 = o2[0];
+				return Float.compare(fitness1, fitness2);
+			}
+		});
+		
+	}
+	
+	private float determineFitness(int[] validationResults) {
+		return (float) (1.0 - ((float) validationResults[1] / (float) validationResults[0]));
+		// Can be slightly negative due to "MustUse" rules, which count as violations but not as dependencies.
+	}
+	
+	private int[] validatePatternCandidate(String[] unitNames) {
+		int[] results = new int[2];
 		
 		ServiceProvider.getInstance().getControlService().setValidate(true);
 		logger.info(new Date().toString() + " CheckConformanceTask is Starting: IValidateService.checkConformance()");
-		validateService.getCategories();
 		validateService.checkConformance();
 		int numberOfViolations = 0;
 		for (RuleDTO appliedRule : defineService.getDefinedRules()) {
@@ -73,52 +158,18 @@ public class ReconstructArchitecture {
 		ServiceProvider.getInstance().getControlService().setValidate(false);
 		logger.info(new Date().toString() + " CheckConformanceTask sets state Validating to false");
 		int totalNumberOfDependencies = 0;
-		for (SoftwareUnitDTO softwareUnit : unitsMappedToPatternElements) {
-			for (SoftwareUnitDTO otherSoftwareUnit : unitsMappedToPatternElements) {
-				if (softwareUnit != otherSoftwareUnit) {
-					totalNumberOfDependencies += getNumberofDependenciesBetweenSoftwareUnits(softwareUnit.uniqueName, otherSoftwareUnit.uniqueName);
+		for (String name : unitNames) {
+			for (String otherName : unitNames) {
+				if (name != otherName) {
+					totalNumberOfDependencies += getNumberofDependenciesBetweenSoftwareUnits(name, otherName);
 				}
 			}
 		}
 		logger.info("Number of dependencies within pattern: " + totalNumberOfDependencies + ", resulting in a total of " + numberOfViolations
 				+ " violations.");
-				
-		// identifyComponents();
-		// identifySubSystems();
-		// IdentifyAdapters();
-	}
-	
-	// TODO: Refactor/extract pattern creation.
-	private void createPattern(String pattern) { // Create a particular pattern in the intended architecture.
-		ModuleDomainService moduleService = new ModuleDomainService();
-		ArrayList<ModuleStrategy> patternModule = new ArrayList<ModuleStrategy>();
-		switch (pattern) {
-			case "3 layered":
-				for (int i = 1; i <= 3; i++) {
-					defineService.addModule("Layer" + i, "**", "Layer", i, null);
-					patternModule.add(moduleService.getModuleByLogicalPath("Layer" + i));
-					if (i > 1) {
-						createRule(patternModule.get(i-1), patternModule.get(i - 2), "MustUse");
-					}
-				}
-				logger.info("3-layered pattern added. ");
-				break;
-			case "MVC":
-				defineService.addModule("Model", "**", "Subsystem", 1, null);
-				patternModule.add(moduleService.getModuleByLogicalPath("Model"));
-				defineService.addModule("View", "**", "Subsystem", 1, null);
-				patternModule.add(moduleService.getModuleByLogicalPath("View"));
-				defineService.addModule("Controller", "**", "Subsystem", 1, null);
-				patternModule.add(moduleService.getModuleByLogicalPath("Controller"));
-				logger.info("MVC pattern added. ");
-				break;
-		}
-	}
-	
-	private String[][] mapSoftwareUnitsToPatternElements(ArrayList<String> patternElements, ArrayList<SoftwareUnitDTO> toMapSoftwareUnits) {
-		PatternMapper bruteForceMapper = new PatternMapper(patternElements.size(), toMapSoftwareUnits.toArray(new String[toMapSoftwareUnits.size()]));
-		logger.info("Determining all possible mappings for an architectural pattern. ");
-		return bruteForceMapper.getPermutations();
+		results[0] = totalNumberOfDependencies;
+		results[1] = numberOfViolations;
+		return results;
 	}
 	
 	private int getNumberofDependenciesBetweenSoftwareUnits(String fromUnit, String toUnit) {

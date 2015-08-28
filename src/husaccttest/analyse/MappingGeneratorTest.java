@@ -5,11 +5,10 @@ import static org.junit.Assert.assertEquals;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import husacct.analyse.task.reconstruct.PatternMapper;
+import husacct.analyse.task.reconstruct.MappingGenerator;
 
-public class PatternMapperTest {
-	
-	private static PatternMapper pm;
+public class MappingGeneratorTest {
+	private static MappingGenerator mg;
 	private static int testSlots;
 	private static String[] testPackageList;
 	
@@ -17,22 +16,16 @@ public class PatternMapperTest {
 	public static void setUp() {
 		testSlots = 3;
 		testPackageList = new String[] { "main.package1", "main.package2", "main.package3", "additional.package1" };
-		pm = new PatternMapper(testSlots, testPackageList);
-	}
-	
-	@Test
-	public void testConstructor() {
-		assertEquals("NUMBER OF SLOTS INCORRECT. ", testSlots, PatternMapper.getSlots());
-		assertEquals("NUMBER OF PACKAGES INCORRECT. ", testPackageList.length, pm.getPackageList().length);
+		mg = new MappingGenerator(testSlots, testPackageList);
 	}
 	
 	@Test(timeout = 2000)
 	public void testNumberOfPermutations() {
 		assertEquals("INCORRECT NUMBER OF PERMUTATIONS. ", factorial(testPackageList.length) / factorial(testPackageList.length - testSlots),
-				pm.getPermutations().length);
+				mg.getPermutations().length);
 	}
 	
-	// Switch PatternMapper.permute to public to test.
+	// Switch MappingGenerator.permute to public to test.
 	// @SuppressWarnings("static-access")
 	// @Test(timeout = 2000)
 	// public void testPermute() {
@@ -40,7 +33,7 @@ public class PatternMapperTest {
 	// for (int i = 0; i < testSlots + 1; i++) {
 	// testCombination[i] = i;
 	// }
-	// assertEquals("INCORRECT NUMBER OF PERMUTATIONS. ", factorial(testCombination.length), pm.permute(testCombination).size());
+	// assertEquals("INCORRECT NUMBER OF PERMUTATIONS. ", factorial(testCombination.length), mg.permute(testCombination).size());
 	// }
 	
 	private int factorial(int n) {
@@ -50,5 +43,4 @@ public class PatternMapperTest {
 		}
 		return fact;
 	}
-	
 }
