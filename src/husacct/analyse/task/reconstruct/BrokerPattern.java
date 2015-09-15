@@ -8,7 +8,7 @@ import husacct.common.dto.SoftwareUnitDTO;
 
 public class BrokerPattern extends Pattern {
 	
-	BrokerPattern(){
+	BrokerPattern() {
 		numberOfModules = 3;
 	}
 	
@@ -38,7 +38,7 @@ public class BrokerPattern extends Pattern {
 		defineService.editModule("Services", "Services", 1, temp);
 		temp.clear();
 		temp.add(analyseService.getSoftwareUnitByUniqueName(mapping[2]));
-		defineService.editModule("Client", "Client", 1, temp);
+//		defineService.editModule("Client", "Client", 1, temp);
 	}
 	
 }

@@ -31,9 +31,7 @@ import javax.xml.datatype.DatatypeConfigurationException;
 import org.apache.log4j.Logger;
 import org.jdom2.Element;
 
-public final class ValidateServiceImpl extends ObservableService implements IValidateService, ISaveable, IConfigurable {
-
-	private final IDefineService defineService = ServiceProvider.getInstance().getDefineService();
+public final class ValidateServiceImpl extends ObservableService implements IValidateService, ISaveable, IConfigurable {private final IDefineService defineService = ServiceProvider.getInstance().getDefineService();
 	private Logger logger = Logger.getLogger(ValidateServiceImpl.class);
 	private final GuiController gui;
 	private final ConfigurationServiceImpl configuration;
@@ -42,7 +40,7 @@ public final class ValidateServiceImpl extends ObservableService implements IVal
 	private final TaskServiceImpl task;
 	private final ValidateConfigurationPanel validateConfigurationPanel;
 	private boolean validationExecuted;
-
+	
 	public ValidateServiceImpl() {
 		this.configuration = new ConfigurationServiceImpl();
 		this.domain = new DomainServiceImpl(configuration);
@@ -52,7 +50,7 @@ public final class ValidateServiceImpl extends ObservableService implements IVal
 		this.validationExecuted = false;
 		this.validateConfigurationPanel = new ValidateConfigurationPanel(task);
 	}
-
+	
 	/**
 	 * {@inheritDoc}
 	 */
@@ -61,12 +59,12 @@ public final class ValidateServiceImpl extends ObservableService implements IVal
 		CategoryDTO[] categories = domain.getCategories();
 		return categories;
 	}
-
+	
 	@Override
 	public SimpleEntry<Calendar, List<Violation>> getAllViolations() {
 		return task.getAllViolations();
 	}
-
+	
 	/**
 	 * {@inheritDoc}
 	 */
@@ -77,7 +75,7 @@ public final class ValidateServiceImpl extends ObservableService implements IVal
 		}
 		return task.getViolationsByLogicalPath(logicalpathFrom, logicalpathTo);
 	}
-
+	
 	/**
 	 * {@inheritDoc}
 	 */
@@ -88,7 +86,7 @@ public final class ValidateServiceImpl extends ObservableService implements IVal
 		}
 		return task.getViolationsByPhysicalPath(physicalpathFrom, physicalpathTo);
 	}
-
+	
 	/**
 	 * {@inheritDoc}
 	 */
@@ -96,35 +94,36 @@ public final class ValidateServiceImpl extends ObservableService implements IVal
 	public String[] getExportExtentions() {
 		return report.getExportExtentions();
 	}
-
+	
 	/**
 	 * {@inheritDoc}
 	 */
 	@Override
 	public void checkConformance() {
 		RuleDTO[] allEnabledAppliedRules = defineService.getDefinedRules();
-
+		
 		// Filter out disabled rules
 		ArrayList<RuleDTO> intermediate = new ArrayList<RuleDTO>();
-		for(RuleDTO appliedRule : allEnabledAppliedRules){
-			if (appliedRule != null){
+		for (RuleDTO appliedRule : allEnabledAppliedRules) {
+			if (appliedRule != null) {
 				intermediate.add(appliedRule);
 			}
 		}
 		int size = intermediate.size();
 		RuleDTO[] rulesToBeChecked = new RuleDTO[size];
 		int index = 0;
-		for(RuleDTO ruleToBeChecked : intermediate){
+		for (RuleDTO ruleToBeChecked : intermediate) {
 			rulesToBeChecked[index] = ruleToBeChecked;
-				index ++;
+			index++;
 		}
-
+		
 		domain.checkConformance(rulesToBeChecked);
 		this.validationExecuted = true;
 		notifyServiceListeners();
 		gui.violationChanged();
 	}
-
+	
+	
 	/**
 	 * {@inheritDoc}
 	 */
@@ -132,7 +131,7 @@ public final class ValidateServiceImpl extends ObservableService implements IVal
 	public JInternalFrame getBrowseViolationsGUI() {
 		return gui.getBrowseViolationsGUI();
 	}
-
+	
 	/**
 	 * {@inheritDoc}
 	 */
@@ -140,7 +139,7 @@ public final class ValidateServiceImpl extends ObservableService implements IVal
 	public JInternalFrame getConfigurationGUI() {
 		return gui.getConfigurationGUI();
 	}
-
+	
 	/**
 	 * {@inheritDoc}
 	 */
@@ -148,7 +147,7 @@ public final class ValidateServiceImpl extends ObservableService implements IVal
 	public Element getWorkspaceData() {
 		return task.exportValidationWorkspace();
 	}
-
+	
 	/**
 	 * {@inheritDoc}
 	 */
@@ -161,7 +160,7 @@ public final class ValidateServiceImpl extends ObservableService implements IVal
 		}
 		notifyServiceListeners();
 	}
-
+	
 	/**
 	 * {@inheritDoc}
 	 */
@@ -169,7 +168,7 @@ public final class ValidateServiceImpl extends ObservableService implements IVal
 	public boolean isValidated() {
 		return validationExecuted;
 	}
-
+	
 	/**
 	 * {@inheritDoc}
 	 */
@@ -177,7 +176,7 @@ public final class ValidateServiceImpl extends ObservableService implements IVal
 	public Calendar[] getViolationHistoryDates() {
 		return task.getViolationHistoryDates();
 	}
-
+	
 	/**
 	 * {@inheritDoc}
 	 */
@@ -185,7 +184,7 @@ public final class ValidateServiceImpl extends ObservableService implements IVal
 	public void exportViolations(File file, String fileType, Calendar date) {
 		report.createReport(file, fileType, date);
 	}
-
+	
 	/**
 	 * {@inheritDoc}
 	 */
@@ -193,7 +192,7 @@ public final class ValidateServiceImpl extends ObservableService implements IVal
 	public void exportViolations(File file, String fileType) {
 		report.createReport(file, fileType);
 	}
-
+	
 	/**
 	 * This method is only used for testing with the Testsuite
 	 * 
@@ -202,19 +201,19 @@ public final class ValidateServiceImpl extends ObservableService implements IVal
 	public ConfigurationServiceImpl getConfiguration() {
 		return configuration;
 	}
-
+	
 	@Override
 	public ViolationDTO[] getViolationsByRule(RuleDTO appliedRule) {
 		return task.getViolationsByRule(appliedRule);
 	}
-
+	
 	/**
 	 * {@inheritDoc}
 	 */
 	public RuleTypeDTO[] getDefaultRuleTypesOfModule(String type) {
 		return domain.getDefaultRuleTypeOfModule(type);
 	}
-
+	
 	/**
 	 * {@inheritDoc}
 	 */
@@ -222,28 +221,28 @@ public final class ValidateServiceImpl extends ObservableService implements IVal
 	public RuleTypeDTO[] getAllowedRuleTypesOfModule(String type) {
 		return domain.getAllowedRuleTypeOfModule(type);
 	}
-
+	
 	@Override
 	public String getConfigurationName() {
 		return ServiceProvider.getInstance().getLocaleService().getTranslatedString("ConfigValidate");
 	}
-
+	
 	@Override
 	public ConfigPanel getConfigurationPanel() {
 		return validateConfigurationPanel;
 	}
-
+	
 	@Override
 	public HashMap<String, ConfigPanel> getSubItems() {
 		HashMap<String, ConfigPanel> subItems = new HashMap<String, ConfigPanel>();
 		return subItems;
 	}
-
+	
 	@Override
 	public void setAllowedRuleTypeOfModule(String moduleType, String ruleTypeKey, boolean value) {
 		domain.setAllowedRuleTypeOfModule(moduleType, ruleTypeKey, value);
 	}
-
+	
 	@Override
 	public void setDefaultRuleTypeOfModule(String moduleType, String ruleTypeKey, boolean value) {
 		domain.setDefaultRuleTypeOfModule(moduleType, ruleTypeKey, value);

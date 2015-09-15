@@ -15,11 +15,11 @@ public class MappingGeneratorTest {
 	@BeforeClass
 	public static void setUp() {
 		testSlots = 3;
-		testPackageList = new String[] { "main.package1", "main.package2", "main.package3", "additional.package1" };
+		testPackageList = new String[] { "package1", "package2", "package3", "package4", "package5", "package6", "package7" };
 		mg = new MappingGenerator(testSlots, testPackageList);
 	}
 	
-	@Test(timeout = 2000)
+	@Test(timeout = 20)
 	public void testNumberOfPermutations() {
 		assertEquals("INCORRECT NUMBER OF PERMUTATIONS. ", factorial(testPackageList.length) / factorial(testPackageList.length - testSlots),
 				mg.getPermutations().length);

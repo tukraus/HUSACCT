@@ -2,6 +2,11 @@ package husacct.analyse.task.reconstruct;
 
 import java.util.ArrayList;
 
+//This MappingGenerator provides you with all the permutations by which a group of size N can be arranged into groups of size r. 
+//This is simply a multiplication of the number of combinations in one respect, the number of ways N can be split into groups of size r, 
+//times the number of combinations in the other respect, namely the number of ways a group of size r can be arranged. 
+//These permutations can be used for a "brute force" approach to pattern matching, where all possible mappings are considered.
+
 public class MappingGenerator {
 	private static int Slots;
 	private static String[] PackageList;
