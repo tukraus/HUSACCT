@@ -1,6 +1,7 @@
 package husacct.analyse.task.reconstruct;
 
 import java.util.ArrayList;
+import java.util.Map;
 
 import husacct.ServiceProvider;
 import husacct.common.dto.ModuleDTO;
@@ -42,4 +43,6 @@ public abstract class Pattern {
 	public int getNumberOfModules() {
 		return numberOfModules;
 	}
+
+	public abstract void mapPatternAllowingAggregates(Map<Integer, ArrayList<String>> patternUnitNames);
 }

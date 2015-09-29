@@ -8,7 +8,7 @@ import husacct.common.dto.SoftwareUnitDTO;
 
 public class BrokerPattern extends Pattern {
 	
-	BrokerPattern() {
+	public BrokerPattern() {
 		numberOfModules = 3;
 	}
 	

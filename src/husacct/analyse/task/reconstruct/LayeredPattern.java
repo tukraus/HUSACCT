@@ -1,9 +1,11 @@
 package husacct.analyse.task.reconstruct;
 
 import java.util.ArrayList;
+import java.util.Map;
 
 import husacct.ServiceProvider;
 import husacct.analyse.IAnalyseService;
+import husacct.common.dto.ModuleDTO;
 import husacct.common.dto.SoftwareUnitDTO;
 
 public class LayeredPattern extends Pattern {
@@ -39,4 +41,19 @@ public class LayeredPattern extends Pattern {
 			temp.clear();
 		}
 	}
+	
+	@Override
+	public void mapPatternAllowingAggregates(Map<Integer, ArrayList<String>> patternUnitNames) {
+		IAnalyseService analyseService = ServiceProvider.getInstance().getAnalyseService();
+		ArrayList<SoftwareUnitDTO> temp = new ArrayList<>();
+		for (int i = 0; i < patternUnitNames.size(); i++) {
+			for (int j = 0; j < patternUnitNames.get(i).size(); j++) {
+				temp.add(analyseService.getSoftwareUnitByUniqueName(patternUnitNames.get(i).get(j)));
+			}
+			defineService.editModule("Layer" + (i + 1), "Layer" + (i + 1), i + 1, temp);
+			temp.clear();
+		}
+		ModuleDTO[] test = defineService.getModule_AllRootModules();
+	}
+	
 }
