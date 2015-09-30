@@ -14,7 +14,7 @@ import org.jgap.impl.DefaultConfiguration;
 import org.jgap.impl.IntegerGene;
 
 public class GeneticAlgorithm {
-	private static final int MAX_ALLOWED_EVOLUTIONS = 50;
+	private static final int MAX_ALLOWED_EVOLUTIONS = 20;
 	private static int numberOfGenes;
 	private static String[] softwareUnitNames;
 	private static int numberOfModules;
@@ -22,11 +22,11 @@ public class GeneticAlgorithm {
 	private static ArrayList<Chromosome> bestSolutions;
 	private static ReconstructArchitecture reconstructArchitecture;
 	private static Pattern pattern;
-	
+
 	public static void determineBestCandidates(boolean a_doMonitor) throws Exception {
 		Configuration conf = new DefaultConfiguration();
-		// Care that the fittest individual of the current population is always taken to the next generation.
-		// With that, the population size may exceed its original size by one.
+		// Care that the fittest individual of the current population is always taken to the next generation. With that, the population size may
+		// exceed its original size by one.
 		conf.setPreservFittestIndividual(true);
 		conf.setKeepPopulationSizeConstant(false);
 		// Set the fitness function we want to use, which is our GeneticFitnessFunction. We construct it with the target amount of change passed in to
@@ -51,9 +51,11 @@ public class GeneticAlgorithm {
 		for (int i = 0; i < MAX_ALLOWED_EVOLUTIONS; i++) {
 			if (!uniqueChromosomes(population.getPopulation()))
 				throw new RuntimeException("Invalid state in generation " + i);
-			if (m_monitor != null)
+			if (m_monitor != null) {
+				System.out.println("Begin evolution iteration " + i);
 				population.evolve(m_monitor);
-			else
+				System.out.println("End evolution iteration " + i);
+			} else
 				population.evolve();
 		}
 		long endTime = System.currentTimeMillis();
@@ -61,8 +63,9 @@ public class GeneticAlgorithm {
 		bestSolutions = new ArrayList<Chromosome>(10);
 		bestSolutions.addAll(population.getFittestChromosomes(10));
 	}
-	
-	public static ArrayList<Chromosome> run(Pattern currentPattern, String[] softwareUnits, boolean monitor, ReconstructArchitecture reconstruct) throws Exception {
+
+	public static ArrayList<Chromosome> run(Pattern currentPattern, String[] softwareUnits, boolean monitor, ReconstructArchitecture reconstruct)
+			throws Exception {
 		if (softwareUnits.length < 2) {
 			System.out.println("Too few software units. ");
 		} else if (softwareUnits.length > GeneticFitnessFunction.getMaxBounds())
@@ -79,7 +82,7 @@ public class GeneticAlgorithm {
 		determineBestCandidates(monitor);
 		return bestSolutions;
 	}
-	
+
 	// Check that all chromosomes are unique
 	public static boolean uniqueChromosomes(Population a_pop) {
 		for (int i = 0; i < a_pop.size() - 1; i++) {

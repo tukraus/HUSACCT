@@ -31,8 +31,8 @@ public class ReconstructArchitecture {
 	private IModelQueryService queryService;
 	private IDefineService defineService;
 	private IValidateService validateService;
-	private ArrayList<SoftwareUnitDTO> internalRootPackagesWithClasses; // The first packages (starting from the project root) that contain one or
-																		// more classes.
+	private ArrayList<SoftwareUnitDTO> internalRootPackagesWithClasses;
+	// The first packages starting from the project root) that contain one or more classes.
 	// External system variables
 	private String xLibrariesRootPackage = "xLibraries";
 	private ArrayList<SoftwareUnitDTO> xLibrariesMainPackages = new ArrayList<SoftwareUnitDTO>();
@@ -40,21 +40,21 @@ public class ReconstructArchitecture {
 	private TreeMap<Integer, ArrayList<SoftwareUnitDTO>> layers = new TreeMap<Integer, ArrayList<SoftwareUnitDTO>>();
 	private int layerThreshold = 10; // Percentage of allowed violating dependencies (back-calls) for adding layers.
 	private int skipCallThreshold = 10; // Percentage of allowed violating dependencies (skip-calls) for partially merging layers.
-	
+
 	public ReconstructArchitecture(IModelQueryService queryService) {
 		this.queryService = queryService;
 		defineService = ServiceProvider.getInstance().getDefineService();
 		validateService = ServiceProvider.getInstance().getValidateService();
 		identifyExternalSystems();
 		determineInternalRootPackagesWithClasses();
-		
-		String pattern = "layered";
-		int numberOfLayers = 3; // Only matters for n-layered patterns.
-		
+
+		String pattern = "Layered";
+		int numberOfLayers = 3; // Only matters for N-Layered patterns.
+
 		logger.info("Number of rules before applying patterns: " + defineService.getDefinedRules().length);
 		Pattern currentPattern = null;
 		switch (pattern) {
-			case "layered":
+			case "Layered":
 				currentPattern = new LayeredPattern(numberOfLayers);
 				currentPattern.insertPattern();
 				break;
@@ -69,7 +69,7 @@ public class ReconstructArchitecture {
 		}
 		logger.info("Number of rules after applying patterns: " + defineService.getDefinedRules().length);
 		if (currentPattern != null) {
-			// Temporary dialogue window to indicate reconstruction is busy. TO BE REPLACED!
+			// TODO: Temporary dialogue window to indicate reconstruction is busy. TO BE REPLACED!
 			JDialog dialog = new JDialog();
 			dialog.setSize(100, 50);
 			dialog.setTitle("Working...");
@@ -80,20 +80,22 @@ public class ReconstructArchitecture {
 			dialog.setVisible(false);
 		}
 	}
-	
+
 	private void geneticApproach(Pattern currentPattern) {
 		try {
 			String[] patternUnitNames = new String[internalRootPackagesWithClasses.size()];
 			for (int i = 0; i < patternUnitNames.length; i++)
 				patternUnitNames[i] = internalRootPackagesWithClasses.get(i).uniqueName;
 			ArrayList<Chromosome> bestSolutions = new ArrayList<Chromosome>(10);
+			ServiceProvider.getInstance().getControlService().setValidate(true);
 			bestSolutions.addAll(GeneticAlgorithm.run(currentPattern, patternUnitNames, true, this));
+			ServiceProvider.getInstance().getControlService().setValidate(false);
 			logger.info(bestSolutions.toString());
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
-	
+
 	private void bruteForceApproach(String pattern, Pattern currentPattern) {
 		int numberOfTopCandidates = 10;
 		String[] patternUnitNames = new String[internalRootPackagesWithClasses.size()];
@@ -106,7 +108,8 @@ public class ReconstructArchitecture {
 		float lowestTopFitness = 0;
 		ServiceProvider.getInstance().getControlService().setValidate(true);
 		Instant start = Instant.now();
-		for (int i = 0; i < patternNames.length; i++) { // This is where validation is requested and a top 10 is generated.
+		for (int i = 0; i < patternNames.length; i++) {
+			// This is where validation is requested and a top 10 is generated.
 			logger.info(patternNames[i][0]);
 			currentPattern.mapPattern(patternNames[i]);
 			fitness = determineFitness(validatePatternCandidate(patternNames[i]));
@@ -140,18 +143,25 @@ public class ReconstructArchitecture {
 		logger.info("This results in " + patternNames.length + " mappings to test.");
 		logger.info("Time needed to map, validate and score all pattern candidates: " + Duration.between(start, end).getSeconds() + " seconds.");
 		logger.info("Best " + numberOfTopCandidates + " candidates: ");
-		for (int i = 0; i < numberOfTopCandidates; i++) { // A fitness score between 0 and 1 is more intuitive for the output, but the genetic
-															// algorithm requires 1.0 to be the lowest score.
+		for (int i = 0; i < numberOfTopCandidates; i++) { // A fitness score
+															// between 0 and 1
+															// is more intuitive
+															// for the output,
+															// but the genetic
+															// algorithm
+															// requires 1.0 to
+															// be the lowest
+															// score.
 			logger.info("Fitness score: " + (candidateScores[i][0] - 1) + ". Mapped software units unique names: "
 					+ Arrays.deepToString(patternNames[(int) candidateScores[i][1]]));
 		}
 		currentPattern.mapPattern(patternNames[(int) candidateScores[numberOfTopCandidates - 1][1]]);
 		logger.info("This last mapping was selected for the intended architecture by default.");
 	}
-	
+
 	private void sortCandidates(float[][] candidateScores) {
 		Arrays.sort(candidateScores, new Comparator<float[]>() {
-			
+
 			@Override
 			public int compare(float[] o1, float[] o2) {
 				float fitness1 = o1[0];
@@ -160,7 +170,7 @@ public class ReconstructArchitecture {
 			}
 		});
 	}
-	
+
 	public float getFitnessScore(Pattern pattern, int[] alleles) {
 		Map<Integer, ArrayList<String>> patternUnitNames = new HashMap<Integer, ArrayList<String>>();
 		for (int i = 0; i < alleles.length; i++) {
@@ -176,13 +186,13 @@ public class ReconstructArchitecture {
 				}
 			}
 		}
-		if (patternUnitNames.containsKey(0) && patternUnitNames.containsKey(1) && patternUnitNames.containsKey(2)) {
+		if (patternUnitNames.keySet().size() == pattern.numberOfModules) {
 			pattern.mapPatternAllowingAggregates(patternUnitNames);
 			return determineFitness(validatePatternCandidateAllowingAggregates(patternUnitNames));
 		} else
 			return -1;
 	}
-	
+
 	private int[][] validatePatternCandidateAllowingAggregates(Map<Integer, ArrayList<String>> patternUnitNames) {
 		int[][] results = new int[2][6];
 		validateService.checkConformance();
@@ -215,7 +225,7 @@ public class ReconstructArchitecture {
 		results[1] = numberOfViolations;
 		return results;
 	}
-	
+
 	private float determineFitness(int[][] validationResults) {
 		if (validationResults[0] == null)
 			return -1; // In case of excluded candidate.
@@ -223,13 +233,11 @@ public class ReconstructArchitecture {
 		int sum = 0;
 		for (int t = 0; t < 6; t++) {
 			// sum+= weight[t]*numberOfViolations[t];
-			if (t == 0)
-				logger.info("Number of MustUse violations (should be zero): " + validationResults[1][t]);
 			sum += validationResults[1][t];
 		}
 		return (2 - (1 / (sumOfWeights * (float) validationResults[0][0])) * sum);
 	}
-	
+
 	private int[][] validatePatternCandidate(String[] unitNames) {
 		int[][] results = new int[2][6];
 		validateService.checkConformance();
@@ -260,7 +268,7 @@ public class ReconstructArchitecture {
 		results[1] = numberOfViolations;
 		return results;
 	}
-	
+
 	private int determineCategoryIndex(String currentRuleType) {
 		if (currentRuleType == "MustUse")
 			return 0;
@@ -277,12 +285,12 @@ public class ReconstructArchitecture {
 		else
 			return 6;
 	}
-	
+
 	private int getNumberofDependenciesBetweenSoftwareUnits(String fromUnit, String toUnit) {
 		IAnalyseService analyseService = ServiceProvider.getInstance().getAnalyseService();
 		return analyseService.getDependenciesFromSoftwareUnitToSoftwareUnit(fromUnit, toUnit).length;
 	}
-	
+
 	private void identifyExternalSystems() {
 		// Create module "ExternalSystems"
 		ArrayList<SoftwareUnitDTO> emptySoftwareUnitsArgument = new ArrayList<SoftwareUnitDTO>();
@@ -298,7 +306,7 @@ public class ReconstructArchitecture {
 		}
 		logger.info(" Number of added ExternalLibraries: " + nrOfExternalLibraries);
 	}
-	
+
 	private void determineInternalRootPackagesWithClasses() {
 		internalRootPackagesWithClasses = new ArrayList<SoftwareUnitDTO>();
 		SoftwareUnitDTO[] allRootUnits = queryService.getSoftwareUnitsInRoot();
@@ -310,7 +318,8 @@ public class ReconstructArchitecture {
 			}
 		}
 		if (internalRootPackagesWithClasses.size() == 1) {
-			// Temporal solution useful for HUSACCT20 test. To be improved! E.g., classes in root are excluded from the process.
+			// Temporal solution useful for HUSACCT20 test. To be improved!
+			// E.g., classes in root are excluded from the process.
 			String newRoot = internalRootPackagesWithClasses.get(0).uniqueName;
 			internalRootPackagesWithClasses = new ArrayList<SoftwareUnitDTO>();
 			for (SoftwareUnitDTO child : queryService.getChildUnitsOfSoftwareUnit(newRoot)) {
@@ -320,29 +329,33 @@ public class ReconstructArchitecture {
 			}
 		}
 	}
-	
+
 	private void identifyLayers() {
 		// 1) Assign all internalRootPackages to bottom layer
 		int layerId = 1;
 		ArrayList<SoftwareUnitDTO> assignedUnits = new ArrayList<SoftwareUnitDTO>();
 		assignedUnits.addAll(internalRootPackagesWithClasses);
 		layers.put(layerId, assignedUnits);
-		
-		// 2) Identify the bottom layer. Look for packages with dependencies to external systems only.
+
+		// 2) Identify the bottom layer. Look for packages with dependencies to
+		// external systems only.
 		identifyTopLayerBasedOnUnitsInBottomLayer(layerId);
-		
-		// 3) Look iteratively for packages on top of the bottom layer, et cetera.
+
+		// 3) Look iteratively for packages on top of the bottom layer, et
+		// cetera.
 		while (layers.lastKey() > layerId) {
 			layerId++;
 			identifyTopLayerBasedOnUnitsInBottomLayer(layerId);
 		}
 		// mergeLayersPartiallyBasedOnSkipCallAvoidance();
-		// Extra step to minimise the number of skip-calls by moving problematic modules to lower layers.
-		
+		// Extra step to minimise the number of skip-calls by moving problematic
+		// modules to lower layers.
+
 		// 4) Add the layers to the intended architecture
 		int highestLevelLayer = layers.size();
 		if (highestLevelLayer > 1) {
-			// Reverse the layer levels. The numbering of the layers within the intended architecture is different: the highest level layer has
+			// Reverse the layer levels. The numbering of the layers within the
+			// intended architecture is different: the highest level layer has
 			// hierarchcalLevel = 1
 			int lowestLevelLayer = 1;
 			int raise = highestLevelLayer - lowestLevelLayer;
@@ -360,7 +373,7 @@ public class ReconstructArchitecture {
 		}
 		logger.info(" Number of added Layers: " + layers.size());
 	}
-	
+
 	private void identifyTopLayerBasedOnUnitsInBottomLayer(int bottomLayerId) {
 		ArrayList<SoftwareUnitDTO> assignedUnitsOriginalBottomLayer = layers.get(bottomLayerId);
 		@SuppressWarnings("unchecked")
@@ -380,7 +393,8 @@ public class ReconstructArchitecture {
 					}
 				}
 			}
-			if (rootPackageDoesNotUseOtherPackage) { // Leave unit in the lower layer
+			if (rootPackageDoesNotUseOtherPackage) { // Leave unit in the lower
+														// layer
 				assignedUnitsNewBottomLayer.add(softwareUnit);
 			} else { // Assign unit to the higher layer
 				assignedUnitsTopLayer.add(softwareUnit);
@@ -393,7 +407,7 @@ public class ReconstructArchitecture {
 			layers.put(bottomLayerId, assignedUnitsTopLayer);
 		}
 	}
-	
+
 	private void mergeLayersPartiallyBasedOnSkipCallAvoidance() {
 		for (int currentLayerID = layers.size(); currentLayerID > 2; currentLayerID--) {
 			ArrayList<SoftwareUnitDTO> unitsInCurrentLayer = layers.get(currentLayerID);
@@ -417,9 +431,11 @@ public class ReconstructArchitecture {
 					}
 				}
 				if (nrOfSkipCallsFromSoftwareUnitToOtherLayers < ((nrOfDependenciesFromSoftwareUnitToOtherWithinLayer / 100) * skipCallThreshold)) {
-					assignedUnitsNewUpperLayer.add(softwareUnit); // Keep in current layer.
+					assignedUnitsNewUpperLayer.add(softwareUnit);
+					// Keep in current layer.
 				} else {
-					assignedUnitsNewLowerLayer.add(softwareUnit); // Move to one layer below.
+					assignedUnitsNewLowerLayer.add(softwareUnit);
+					// Move to one layer below.
 				}
 			}
 			layers.remove(currentLayerID);
@@ -430,23 +446,23 @@ public class ReconstructArchitecture {
 			}
 		}
 	}
-	
+
 	private void identifyComponents() {
-	
+
 	}
-	
+
 	private void identifySubSystems() {
-	
+
 	}
-	
+
 	private void IdentifyAdapters() { // Here, and adapter is a module with a IsTheOnlyModuleAllowedToUse rule.
-	
+
 	}
-	
+
 	private void createModule() {
-	
+
 	}
-	
+
 	private void createRule(ModuleStrategy moduleTo, ModuleStrategy moduleFrom, String ruleType) {
 		DomainToDtoParser domainParser = new DomainToDtoParser();
 		defineService.addRule(new RuleDTO(ruleType, true, domainParser.parseModule(moduleTo), domainParser.parseModule(moduleFrom), new String[0], "",

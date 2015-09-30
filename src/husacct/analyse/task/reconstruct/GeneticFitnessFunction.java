@@ -13,21 +13,18 @@ public class GeneticFitnessFunction extends FitnessFunction {
 	private int numberOfModules;
 	private ReconstructArchitecture reconstruct;
 	private Pattern pattern;
-	
+
 	public GeneticFitnessFunction(Pattern currentPattern, ReconstructArchitecture reconstructArchitecture) {
 		numberOfModules = currentPattern.numberOfModules;
 		reconstruct = reconstructArchitecture;
 		pattern = currentPattern;
 	}
-	
-	// Determine fitness value for given a chromosome (pattern candidate).
-	// Higher fitness should mean a better candidate throughout this class.
-	
+
+	// Determine fitness value for given a chromosome (pattern candidate). Higher fitness should mean a better candidate throughout this class.
+
 	public double evaluate(IChromosome a_subject) {
-		// Take care of the fitness evaluator. It could either be weighting higher
-		// fitness values higher (e.g.DefaultFitnessEvaluator). Or it could weight
-		// lower fitness values higher, because the fitness value is seen as a
-		// defect rate (e.g. DeltaFitnessEvaluator)
+		// Take care of the fitness evaluator. It could either be weighting higher fitness values higher (e.g.DefaultFitnessEvaluator). Or it could
+		// weight lower fitness values higher, because the fitness value is seen as a defect rate (e.g. DeltaFitnessEvaluator)
 		boolean defaultComparation = a_subject.getConfiguration().getFitnessEvaluator().isFitter(2, 1);
 		if (defaultComparation == false) {
 			return 1.0;
