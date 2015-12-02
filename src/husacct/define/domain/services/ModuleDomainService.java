@@ -113,6 +113,39 @@ public class ModuleDomainService {
 	    }
 	}
 	
+	public void editModuleWithAggregation(String logicalPath, String newName, int newHierarchicalLevel, ArrayList<SoftwareUnitDTO> newSoftwareUnits) {
+		try{
+			ModuleStrategy moduleToEdit = getModuleByLogicalPath(logicalPath);
+			if (moduleToEdit != null) {
+				if (newName != null)
+					moduleToEdit.setName(newName);
+				if ((newHierarchicalLevel != 0) && (moduleToEdit instanceof Layer))
+					((Layer) moduleToEdit).setHierarchicalLevel(newHierarchicalLevel);
+				if (newSoftwareUnits != null) {
+					moduleToEdit.removeAllSUDefintions();
+					for (SoftwareUnitDTO softwareUnit : newSoftwareUnits) {
+						Type softwareUnitDefinitionType = Type.SUBSYSTEM;
+						if (softwareUnit.type.toUpperCase().equals("CLASS")) {
+							softwareUnitDefinitionType = Type.CLASS;
+						} else if (softwareUnit.type.toUpperCase().equals("INTERFACE")) {
+							softwareUnitDefinitionType = Type.INTERFACE;
+						} else if (softwareUnit.type.toUpperCase().equals("EXTERNALLIBRARY")) {
+							softwareUnitDefinitionType = Type.EXTERNALLIBRARY;
+						} else if (softwareUnit.type.toUpperCase().equals("LIBRARY")) {
+							softwareUnitDefinitionType = Type.LIBRARY;
+						} else if (softwareUnit.type.toUpperCase().equals("PACKAGE")) {
+							softwareUnitDefinitionType = Type.PACKAGE;
+						}
+						moduleToEdit.addSUDefinition(new SoftwareUnitDefinition(softwareUnit.uniqueName, softwareUnitDefinitionType));
+					}
+					
+				}
+			}
+	    } catch(Exception e) {
+	        logger.error(e);
+	    }
+	}
+	
 	public String addModuleToParent(long parentModuleId, ModuleStrategy module) {
 		String message = "";
 		if (parentModuleId <= 0) {

@@ -2,21 +2,22 @@ package husacct.analyse.task.reconstruct;
 
 import java.util.ArrayList;
 
-//This MappingGenerator provides you with all the permutations by which a group of size N can be arranged into groups of size r. 
-//This is simply a multiplication of the number of combinations in one respect, the number of ways N can be split into groups of size r, 
-//times the number of combinations in the other respect, namely the number of ways a group of size r can be arranged. 
-//These permutations can be used for a "brute force" approach to pattern matching, where all possible mappings are considered.
+// This MappingGenerator provides you with all the permutations by which a group of size N can be arranged into groups of size r.
+// This is simply a multiplication of the number of combinations in one respect, the number of ways N can be split into groups of size r,
+// times the number of combinations in the other respect, namely the number of ways a group of size r can be arranged.
+// These permutations can be used for a "brute force" approach to pattern matching, where all possible mappings are considered.
 
 public class MappingGenerator {
+
 	private static int Slots;
 	private static String[] PackageList;
 	private static ArrayList<ArrayList<String>> permutations = new ArrayList<ArrayList<String>>();
-	
+
 	public MappingGenerator(int numberOfModules, String[] packageList) {
 		Slots = numberOfModules;
 		PackageList = packageList;
 	}
-	
+
 	private static void addToPermutations(ArrayList<ArrayList<Integer>> arrayList) {
 		for (int i = 0; i < arrayList.size(); i++) {
 			ArrayList<String> temp = new ArrayList<String>(Slots);
@@ -26,7 +27,7 @@ public class MappingGenerator {
 			permutations.add(temp);
 		}
 	}
-	
+
 	public String[][] getPermutations() {
 		combine(generatePackageNumbers());
 		String[][] permutationsArray = new String[permutations.size()][];
@@ -35,7 +36,7 @@ public class MappingGenerator {
 		}
 		return permutationsArray;
 	}
-	
+
 	private int[] generatePackageNumbers() {
 		int[] packageNumbers = new int[PackageList.length];
 		for (int i = 0; i < PackageList.length; i++) {
@@ -43,12 +44,12 @@ public class MappingGenerator {
 		}
 		return packageNumbers;
 	}
-	
+
 	private void combine(int[] packageNumbers) {
 		int[] combinations = new int[Slots];
 		combineRecursive(packageNumbers, combinations, 0, 0, Slots);
 	}
-	
+
 	private static void combineRecursive(int[] array, int[] result, int currentIndex, int level, int r) {
 		if (level == r) {
 			addToPermutations(permute(result));
@@ -62,7 +63,7 @@ public class MappingGenerator {
 			}
 		}
 	}
-	
+
 	private static ArrayList<ArrayList<Integer>> permute(int[] combinations) {
 		ArrayList<ArrayList<Integer>> result = new ArrayList<ArrayList<Integer>>();
 		result.add(new ArrayList<Integer>());

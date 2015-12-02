@@ -48,34 +48,34 @@ public class DefineServiceImpl extends ObservableService implements IDefineServi
 	private boolean isMapped;
 	protected final IAnalyseService analyseService = ServiceProvider.getInstance().getAnalyseService();
 	private Logger logger = Logger.getLogger(DefineServiceImpl.class);
-	
+
 	public DefineServiceImpl() {
 		super();
 		reset();
 		isMapped = false;
 	}
-	
+
 	@Override
 	public void analyze() {
 		StateService.instance().analyze();
 	}
-	
+
 	@Override
 	public void createApplication(String name, ArrayList<ProjectDTO> projects, String version) {
 		defineDomainService.createApplication(name, projects, version);
 	}
-	
+
 	@Override
 	public ApplicationDTO getApplicationDetails() {
 		Application app = defineDomainService.getApplicationDetails();
 		ApplicationDTO appDTO = domainParser.parseApplication(app);
 		return appDTO;
 	}
-	
+
 	public AppliedRuleController getAppliedRuleController() {
 		return new AppliedRuleController(0, -1);
 	}
-	
+
 	@Override
 	public ModuleDTO[] getModule_TheChildrenOfTheModule(String logicalPath) {
 		ModuleDTO[] childModuleDTOs;
@@ -86,15 +86,15 @@ public class DefineServiceImpl extends ObservableService implements IDefineServi
 			ModuleDTO moduleDTO = domainParser.parseModule(module);
 			childModuleDTOs = moduleDTO.subModules;
 		}
-		
+
 		// Removing nested childs
 		for (ModuleDTO modDTO : childModuleDTOs) {
 			modDTO.subModules = new ModuleDTO[] {};
 		}
-		
+
 		return childModuleDTOs;
 	}
-	
+
 	@Override
 	public HashSet<String> getModule_AllPhysicalClassPathsOfModule(String logicalPath) {
 		HashSet<String> resultClasses = new HashSet<String>();
@@ -113,7 +113,7 @@ public class DefineServiceImpl extends ObservableService implements IDefineServi
 		}
 		return resultClasses;
 	}
-	
+
 	@Override // Returns all paths of subpackages (and subsub, etc) within the assigned software units, but not the paths of these assigned software
 				// units
 	public HashSet<String> getModule_AllPhysicalPackagePathsOfModule(String logicalPath) {
@@ -132,7 +132,7 @@ public class DefineServiceImpl extends ObservableService implements IDefineServi
 		}
 		return resultPackages;
 	}
-	
+
 	private TreeMap<String, SoftwareUnitDefinition> getAllAssignedSoftwareUnitsOfModule(String logicalPath) {
 		TreeMap<String, SoftwareUnitDefinition> allAssignedSoftwareUnits = new TreeMap<String, SoftwareUnitDefinition>();
 		try {
@@ -156,7 +156,7 @@ public class DefineServiceImpl extends ObservableService implements IDefineServi
 		}
 		return allAssignedSoftwareUnits;
 	}
-	
+
 	@Override
 	// Gets the hierarchical level of a module. Throws RuntimeException when the module is not found.
 	public int getHierarchicalLevelOfLayer(String logicalPath) {
@@ -170,7 +170,7 @@ public class DefineServiceImpl extends ObservableService implements IDefineServi
 		}
 		return hierarchicalLevel;
 	}
-	
+
 	public JInternalFrame getDefinedGUI() {
 		ApplicationController applicationController = new ApplicationController();
 		applicationController.initUi();
@@ -178,25 +178,25 @@ public class DefineServiceImpl extends ObservableService implements IDefineServi
 		jinternalFrame.setVisible(false);
 		return jinternalFrame;
 	}
-	
+
 	@Override
 	public RuleDTO[] getDefinedRules() {
 		ArrayList<AppliedRuleStrategy> rules = appliedRuleService.getAllEnabledAppliedRules();
 		RuleDTO[] ruleDTOs = domainParser.parseRules(rules);
 		return ruleDTOs;
 	}
-	
+
 	public DefinitionController getDefinitionController() {
 		return DefinitionController.getInstance();
 	}
-	
+
 	@Override
 	public Element exportIntendedArchitecture() {
 		PersistentDomain pd = new PersistentDomain(defineDomainService, moduleService, appliedRuleService);
 		pd.setParseData(DomainElement.LOGICAL);
 		return pd.getWorkspaceData();
 	}
-	
+
 	@Override
 	public ModuleDTO getModule_BasedOnSoftwareUnitName(String physicalPath) {
 		ModuleDTO returnValue = null;
@@ -221,7 +221,7 @@ public class DefineServiceImpl extends ObservableService implements IDefineServi
 		}
 		return returnValue;
 	}
-	
+
 	@Override
 	public String getModule_TheParentOfTheModule(String logicalPath) {
 		String parentLogicalPath = "";
@@ -238,24 +238,24 @@ public class DefineServiceImpl extends ObservableService implements IDefineServi
 		}
 		return parentLogicalPath;
 	}
-	
+
 	@Override
 	public ModuleDTO[] getModule_AllRootModules() {
 		ModuleStrategy[] modules = moduleService.getRootModules();
 		ModuleDTO[] moduleDTOs = domainParser.parseRootModules(modules);
 		return moduleDTOs;
 	}
-	
+
 	public SoftwareUnitController getSoftwareUnitController() {
 		return new SoftwareUnitController(0);
 	}
-	
+
 	@Override
 	public Element getWorkspaceData() {
 		PersistentDomain pd = new PersistentDomain(defineDomainService, moduleService, appliedRuleService);
 		return pd.getWorkspaceData();
 	}
-	
+
 	@Override
 	public boolean isDefined() {
 		boolean isDefined = false;
@@ -264,7 +264,7 @@ public class DefineServiceImpl extends ObservableService implements IDefineServi
 		}
 		return isDefined;
 	}
-	
+
 	@Override
 	public boolean isMapped() {
 		if (!isMapped) {
@@ -277,7 +277,7 @@ public class DefineServiceImpl extends ObservableService implements IDefineServi
 		}
 		return isMapped;
 	}
-	
+
 	@Override
 	public void importIntendedArchitecture(Element e) {
 		reset();
@@ -287,43 +287,61 @@ public class DefineServiceImpl extends ObservableService implements IDefineServi
 		DefinitionController.getInstance().notifyObservers();
 		getDefinitionController().initSettings();
 	}
-	
+
 	@Override
 	public void loadWorkspaceData(Element workspaceData) {
 		PersistentDomain pd = new PersistentDomain(defineDomainService, moduleService, appliedRuleService);
 		pd.loadWorkspaceData(workspaceData);
 	}
-	
+
 	private void reset() {
 		// StateService.instance().reset();
 		defineDomainService = new SoftwareArchitectureDomainService();
 		moduleService = new ModuleDomainService();
 		appliedRuleService = new AppliedRuleDomainService();
 		domainParser = new DomainToDtoParser();
-		
+
 		SoftwareArchitecture.setInstance(new SoftwareArchitecture());
 		DefinitionController.setInstance(new DefinitionController());
 	}
-	
+
 	public void reportArchitecture(String fullFilePath) {
 		ReportArchitectureAbstract reporter = new ReportArchitectureToExcel();
 		reporter.write(fullFilePath);
 	}
-	
+
 	// Services for Architecture Reconstruction
 	public void addModule(String name, String parentLogicalPath, String moduleType, int hierarchicalLevel, ArrayList<SoftwareUnitDTO> softwareUnits) {
 		moduleService.addModule(name, parentLogicalPath, moduleType, hierarchicalLevel, softwareUnits);
 	}
-	
+
 	public void editModule(String logicalPath, String newName, int newHierarchicalLevel, ArrayList<SoftwareUnitDTO> newSoftwareUnits) {
 		moduleService.editModule(logicalPath, newName, newHierarchicalLevel, newSoftwareUnits);
 	}
-	
+
+	public void editModuleWithAggregation(String logicalPath, String newName, int newHierarchicalLevel, ArrayList<SoftwareUnitDTO> newSoftwareUnits) {
+		moduleService.editModuleWithAggregation(logicalPath, newName, newHierarchicalLevel, newSoftwareUnits);
+	}
+
 	public void addRule(RuleDTO rule) {
 		AppliedRuleDomainService ruleService = new AppliedRuleDomainService();
 		ModuleDomainService moduleService = new ModuleDomainService();
 		ruleService.addAppliedRule(rule.ruleTypeKey, "", new String[0], rule.regex, moduleService.getModuleByLogicalPath(rule.moduleFrom.logicalPath),
 				moduleService.getModuleByLogicalPath(rule.moduleTo.logicalPath), true, false, null);
 	}
-	
+
+	public void addRuleWithException(RuleDTO rule, ModuleStrategy exception) {
+		AppliedRuleDomainService ruleService = new AppliedRuleDomainService();
+		ModuleDomainService moduleService = new ModuleDomainService();
+		long parentRuleId = ruleService.addAppliedRule(rule.ruleTypeKey, "", new String[0], rule.regex, moduleService.getModuleByLogicalPath(rule.moduleFrom.logicalPath),
+				moduleService.getModuleByLogicalPath(rule.moduleTo.logicalPath), true, false, null);
+		if (rule.ruleTypeKey == "IsTheOnlyModuleAllowedToUse") {
+			ruleService.addExceptionToAppliedRule(parentRuleId, "IsAllowedToUse", "", "", exception, moduleService.getModuleByLogicalPath(rule.moduleTo.logicalPath),
+					null);
+		} else if (rule.ruleTypeKey == "IsOnlyAllowedToUse") {
+			ruleService.addExceptionToAppliedRule(parentRuleId, "IsAllowedToUse", "", "", moduleService.getModuleByLogicalPath(rule.moduleFrom.logicalPath), exception,
+					null);
+		}
+	}
+
 }

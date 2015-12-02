@@ -5,17 +5,13 @@ import org.jgap.Gene;
 import org.jgap.IChromosome;
 
 public class GeneticFitnessFunction extends FitnessFunction {
-	/**
-	 * 
-	 */
+	
 	private static final long serialVersionUID = 1L;
 	public final static int MAX_BOUND = 4000;
-	private int numberOfModules;
 	private ReconstructArchitecture reconstruct;
 	private Pattern pattern;
 
 	public GeneticFitnessFunction(Pattern currentPattern, ReconstructArchitecture reconstructArchitecture) {
-		numberOfModules = currentPattern.numberOfModules;
 		reconstruct = reconstructArchitecture;
 		pattern = currentPattern;
 	}
@@ -35,6 +31,7 @@ public class GeneticFitnessFunction extends FitnessFunction {
 			alleles[i] = (int) genes[i].getAllele();
 		}
 		double fitness = reconstruct.getFitnessScore(pattern, alleles);
+		System.out.println("Fitness score: " + fitness);
 		return Math.max(1.0d, fitness);
 	}
 

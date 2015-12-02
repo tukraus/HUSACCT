@@ -14,15 +14,17 @@ import org.jgap.impl.DefaultConfiguration;
 import org.jgap.impl.IntegerGene;
 
 public class GeneticAlgorithm {
-	private static final int MAX_ALLOWED_EVOLUTIONS = 20;
+
+	private static final int MAX_ALLOWED_EVOLUTIONS = 1;
 	private static int numberOfGenes;
-	private static String[] softwareUnitNames;
 	private static int numberOfModules;
 	public static EvolutionMonitor m_monitor;
 	private static ArrayList<Chromosome> bestSolutions;
 	private static ReconstructArchitecture reconstructArchitecture;
 	private static Pattern pattern;
+	private static int allowRemainder;
 
+	@SuppressWarnings("unchecked")
 	public static void determineBestCandidates(boolean a_doMonitor) throws Exception {
 		Configuration conf = new DefaultConfiguration();
 		// Care that the fittest individual of the current population is always taken to the next generation. With that, the population size may
@@ -40,11 +42,11 @@ public class GeneticAlgorithm {
 		}
 		Gene[] sampleGenes = new Gene[numberOfGenes];
 		for (int i = 0; i < numberOfGenes; i++) {
-			sampleGenes[i] = new IntegerGene(conf, 0, numberOfModules);
+			sampleGenes[i] = new IntegerGene(conf, allowRemainder, numberOfModules);
 		}
 		IChromosome sampleChromosome = new Chromosome(conf, sampleGenes);
 		conf.setSampleChromosome(sampleChromosome);
-		conf.setPopulationSize(200);
+		conf.setPopulationSize(100);
 		// Create random initial population of Chromosomes.
 		Genotype population = Genotype.randomInitialGenotype(conf);
 		long startTime = System.currentTimeMillis();
@@ -55,8 +57,11 @@ public class GeneticAlgorithm {
 				System.out.println("Begin evolution iteration " + i);
 				population.evolve(m_monitor);
 				System.out.println("End evolution iteration " + i);
-			} else
+			} else {
+				System.out.println("Begin evolution iteration " + i);
 				population.evolve();
+				System.out.println("End evolution iteration " + i);
+			}
 		}
 		long endTime = System.currentTimeMillis();
 		System.out.println("Total evolution time: " + (endTime - startTime) + " ms");
@@ -64,8 +69,8 @@ public class GeneticAlgorithm {
 		bestSolutions.addAll(population.getFittestChromosomes(10));
 	}
 
-	public static ArrayList<Chromosome> run(Pattern currentPattern, String[] softwareUnits, boolean monitor, ReconstructArchitecture reconstruct)
-			throws Exception {
+	public static ArrayList<Chromosome> run(Pattern currentPattern, String[] softwareUnits, boolean monitor, ReconstructArchitecture reconstruct,
+			boolean remainder) throws Exception {
 		if (softwareUnits.length < 2) {
 			System.out.println("Too few software units. ");
 		} else if (softwareUnits.length > GeneticFitnessFunction.getMaxBounds())
@@ -73,11 +78,15 @@ public class GeneticAlgorithm {
 		else if (currentPattern.numberOfModules > softwareUnits.length)
 			System.out.println("Too few pattern modules. ");
 		else {
-			softwareUnitNames = softwareUnits;
 			numberOfGenes = softwareUnits.length;
 			numberOfModules = currentPattern.numberOfModules;
 			reconstructArchitecture = reconstruct;
 			pattern = currentPattern;
+			if (remainder)
+				allowRemainder = 0;
+			else
+				allowRemainder = 1; // Allowing a Remainder (software units not mapped to any of the pattern's module) means that genes should have
+									// allele values starting with 0, otherwise they should start with 1. Hence the integer value here.
 		}
 		determineBestCandidates(monitor);
 		return bestSolutions;
