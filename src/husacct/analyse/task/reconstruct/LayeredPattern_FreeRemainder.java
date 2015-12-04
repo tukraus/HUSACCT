@@ -4,7 +4,10 @@ public class LayeredPattern_FreeRemainder extends LayeredPattern {
 	// The version of the N-Layered pattern where the Remainder can all on any layer, though all but the final layer cannot call on the Remainder.
 	public LayeredPattern_FreeRemainder(int numberOfLayers) {
 		super(numberOfLayers);
-		// TODO Auto-generated constructor stub
+	}
+
+	public LayeredPattern_FreeRemainder() {
+		super();
 	}
 
 	@Override

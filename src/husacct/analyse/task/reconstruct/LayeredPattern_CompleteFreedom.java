@@ -4,7 +4,10 @@ public class LayeredPattern_CompleteFreedom extends LayeredPattern {
 	// The interpretation of the N-Layered pattern for which there exist no restriction for the Remainder to use the layers.
 	public LayeredPattern_CompleteFreedom(int numberOfLayers) {
 		super(numberOfLayers);
-		// TODO Auto-generated constructor stub
+	}
+
+	public LayeredPattern_CompleteFreedom() {
+		super();
 	}
 
 	@Override

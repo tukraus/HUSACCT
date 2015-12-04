@@ -21,6 +21,7 @@ public abstract class Pattern {
 	protected ArrayList<SoftwareUnitDTO> unitsToMap;
 	protected ArrayList<ModuleDTO> patternModules;
 	protected int numberOfModules;
+	protected int numberOfRules;
 	protected String name;
 
 	// Add modules to the intended architecture in line with an architectural pattern.
@@ -31,6 +32,7 @@ public abstract class Pattern {
 
 	// Insert a pattern into the intended architecture.
 	public void insertPattern() {
+		numberOfRules = 0;
 		defineModules();
 		defineRules();
 	}
@@ -40,15 +42,22 @@ public abstract class Pattern {
 
 	protected void addRule(ModuleStrategy moduleTo, ModuleStrategy moduleFrom, String ruleType) {
 		defineService.addRule(new RuleDTO(ruleType, true, domainParser.parseModule(moduleTo), domainParser.parseModule(moduleFrom), new String[0], "", null, false));
+		numberOfRules++;
 	}
 
 	protected void addRule(ModuleStrategy moduleTo, ModuleStrategy moduleFrom, String ruleType, ModuleStrategy exception) {
 		defineService.addRuleWithException(
 				new RuleDTO(ruleType, true, domainParser.parseModule(moduleTo), domainParser.parseModule(moduleFrom), new String[0], "", null, false), exception);
+		numberOfRules += 2; // An exception is essentially an additional rule (e.g. two "Is only allowed to use" rules coming from the same module is
+							// simply one such rule plus an exception of that rule.)
 	}
 
 	public int getNumberOfModules() {
 		return numberOfModules;
+	}
+
+	public int getNumberOfRules() {
+		return numberOfRules;
 	}
 
 	public abstract void mapPatternAllowingAggregates(Map<Integer, ArrayList<String>> patternUnitNames);

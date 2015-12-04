@@ -4,7 +4,10 @@ public class LayeredPattern_RestrictedRemainder extends LayeredPattern {
 	// An interpretation of the N-Layered pattern in which the layers can call upon the Remainder, but not vice versa.
 	public LayeredPattern_RestrictedRemainder(int numberOfLayers) {
 		super(numberOfLayers);
-		// TODO Auto-generated constructor stub
+	}
+
+	public LayeredPattern_RestrictedRemainder() {
+		super();
 	}
 
 	@Override

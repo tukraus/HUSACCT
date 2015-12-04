@@ -2,48 +2,74 @@ package husaccttest.analyse;
 
 import static org.junit.Assert.assertEquals;
 
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
+import java.util.ArrayList;
+import java.util.Iterator;
+
 import org.junit.BeforeClass;
 import org.junit.Test;
 
 import husacct.ServiceProvider;
+import husacct.analyse.task.reconstruct.BrokerPattern_CompleteFreedom;
+import husacct.analyse.task.reconstruct.BrokerPattern_FreeRemainder;
+import husacct.analyse.task.reconstruct.BrokerPattern_RequesterInterface;
+import husacct.analyse.task.reconstruct.BrokerPattern_RestrictedRemainder;
+import husacct.analyse.task.reconstruct.LayeredPattern_CompleteFreedom;
+import husacct.analyse.task.reconstruct.LayeredPattern_FreeRemainder;
+import husacct.analyse.task.reconstruct.LayeredPattern_IsolatedInternalLayers;
+import husacct.analyse.task.reconstruct.LayeredPattern_RestrictedRemainder;
+import husacct.analyse.task.reconstruct.MVCPattern_CompleteFreedom;
+import husacct.analyse.task.reconstruct.MVCPattern_ControllerInterface;
 import husacct.analyse.task.reconstruct.MVCPattern_FreeRemainder;
+import husacct.analyse.task.reconstruct.MVCPattern_RestrictedRemainder;
 import husacct.analyse.task.reconstruct.Pattern;
 import husacct.define.IDefineService;
 
 public class architecturalPatternTest {
 	static Pattern currentPattern = null;
 	static IDefineService defineService;
+	static ArrayList<Pattern> list = new ArrayList<Pattern>();
+	static Iterator<Pattern> it;
 
 	@BeforeClass
 	public static void setUpBeforeClass() throws Exception {
-		currentPattern = new MVCPattern_FreeRemainder();
 		defineService = ServiceProvider.getInstance().getDefineService();
-
+		addPatternTypes();
+		it = list.iterator();
 	}
 
-	@AfterClass
-	public static void tearDownAfterClass() throws Exception {
-	}
-
-	@Before
-	public void setUp() throws Exception {
-	}
-
-	@After
-	public void tearDown() throws Exception {
-	}
-
-	@Test
-	public void testPatternInsertion1() {
-		currentPattern.insertPattern();
+	private static void addPatternTypes() { // Add new pattern classes here.
+		try {
+			list.add(LayeredPattern_CompleteFreedom.class.newInstance());
+			list.add(LayeredPattern_FreeRemainder.class.newInstance());
+			list.add(LayeredPattern_IsolatedInternalLayers.class.newInstance());
+			list.add(LayeredPattern_RestrictedRemainder.class.newInstance());
+			list.add(MVCPattern_FreeRemainder.class.newInstance());
+			list.add(MVCPattern_CompleteFreedom.class.newInstance());
+			list.add(MVCPattern_ControllerInterface.class.newInstance());
+			list.add(MVCPattern_FreeRemainder.class.newInstance());
+			list.add(MVCPattern_RestrictedRemainder.class.newInstance());
+			list.add(BrokerPattern_RequesterInterface.class.newInstance());
+			list.add(BrokerPattern_FreeRemainder.class.newInstance());
+			list.add(BrokerPattern_CompleteFreedom.class.newInstance());
+			list.add(BrokerPattern_RequesterInterface.class.newInstance());
+			list.add(BrokerPattern_RestrictedRemainder.class.newInstance());
+		} catch (InstantiationException e) {
+			e.printStackTrace();
+		} catch (IllegalAccessException e) {
+			e.printStackTrace();
+		}
 	}
 
 	@Test
 	public void testNumberOfRules() {
-		assertEquals("INCORRECT NUMBER OF RULES", 8, defineService.getDefinedRules().length);
+		while (it.hasNext()) {
+			currentPattern = (Pattern) it.next();
+			currentPattern.insertPattern();
+			assertEquals("INCORRECT NUMBER OF RULES FOR: " + currentPattern, currentPattern.getNumberOfRules(), defineService.getDefinedRules().length);
+			System.out.println(currentPattern);
+			defineService.resetDefinedArchitecture();
+		}
+
 	}
 
 }

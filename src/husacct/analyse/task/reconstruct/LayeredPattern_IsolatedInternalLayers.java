@@ -4,7 +4,10 @@ public class LayeredPattern_IsolatedInternalLayers extends LayeredPattern {
 	// The version of the N-Layered pattern in which the internal layers are isolated from the Remainder.
 	public LayeredPattern_IsolatedInternalLayers(int numberOfLayers) {
 		super(numberOfLayers);
-		// TODO Auto-generated constructor stub
+	}
+
+	public LayeredPattern_IsolatedInternalLayers() {
+		super();
 	}
 
 	@Override

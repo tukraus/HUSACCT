@@ -53,8 +53,8 @@ public class ReconstructArchitecture {
 		defineService = ServiceProvider.getInstance().getDefineService();
 		validateService = ServiceProvider.getInstance().getValidateService();
 		identifyExternalSystems();
-		// determineInternalRootPackagesWithClasses();
-		determineInternalRootPackagesWithClassesIncludingClasses();
+		determineInternalRootPackagesWithClasses();
+		// determineInternalRootPackagesWithClassesIncludingClasses();
 		// If source code is not well structured in a package hierarchy, including individual classes in the root might help.
 
 		String pattern = "MVC";
@@ -202,7 +202,8 @@ public class ReconstructArchitecture {
 		logger.info("Best " + numberOfTopCandidates + " candidates: ");
 		for (int i = 0; i < numberOfTopCandidates; i++) {
 			// A fitness score between 0 and 1 is more intuitive for the output, but the genetic algorithm requires 1.0 to be the lowest score.
-			logger.info("Fitness score: " + (candidateScores[i][0] - 1) + ". Mapped software units unique names: " + Arrays.deepToString(patternNames[(int) candidateScores[i][1]]));
+			logger.info("Fitness score: " + (candidateScores[i][0] - 1) + ". Mapped software units unique names: "
+					+ Arrays.deepToString(patternNames[(int) candidateScores[i][1]]));
 		}
 		currentPattern.mapPattern(patternNames[(int) candidateScores[numberOfTopCandidates - 1][1]]);
 		logger.info("This last mapping was selected for the intended architecture by default.");
@@ -481,8 +482,10 @@ public class ReconstructArchitecture {
 			boolean rootPackageDoesNotUseOtherPackage = true;
 			for (SoftwareUnitDTO otherSoftwareUnit : assignedUnitsBottomLayerClone) {
 				if (!otherSoftwareUnit.uniqueName.equals(softwareUnit.uniqueName)) {
-					int nrOfDependenciesFromsoftwareUnitToOther = queryService.getDependenciesFromSoftwareUnitToSoftwareUnit(softwareUnit.uniqueName, otherSoftwareUnit.uniqueName).length;
-					int nrOfDependenciesFromOtherTosoftwareUnit = queryService.getDependenciesFromSoftwareUnitToSoftwareUnit(otherSoftwareUnit.uniqueName, softwareUnit.uniqueName).length;
+					int nrOfDependenciesFromsoftwareUnitToOther = queryService.getDependenciesFromSoftwareUnitToSoftwareUnit(softwareUnit.uniqueName,
+							otherSoftwareUnit.uniqueName).length;
+					int nrOfDependenciesFromOtherTosoftwareUnit = queryService.getDependenciesFromSoftwareUnitToSoftwareUnit(otherSoftwareUnit.uniqueName,
+							softwareUnit.uniqueName).length;
 					if (nrOfDependenciesFromsoftwareUnitToOther > ((nrOfDependenciesFromOtherTosoftwareUnit / 100) * layerThreshold)) {
 						rootPackageDoesNotUseOtherPackage = false;
 					}
@@ -513,13 +516,15 @@ public class ReconstructArchitecture {
 				int nrOfDependenciesFromSoftwareUnitToOtherWithinLayer = 0;
 				int nrOfSkipCallsFromSoftwareUnitToOtherLayers = 0;
 				for (SoftwareUnitDTO otherSoftwareUnit : unitsInCurrentLayer) {
-					nrOfDependenciesFromSoftwareUnitToOtherWithinLayer += queryService.getDependenciesFromSoftwareUnitToSoftwareUnit(softwareUnit.uniqueName, otherSoftwareUnit.uniqueName).length;
+					nrOfDependenciesFromSoftwareUnitToOtherWithinLayer += queryService.getDependenciesFromSoftwareUnitToSoftwareUnit(softwareUnit.uniqueName,
+							otherSoftwareUnit.uniqueName).length;
 				}
 				for (int currentLowerLayerID = currentLayerID - 2; currentLowerLayerID < 0; currentLowerLayerID--) {
 					unitsInCurrentLowerLayer = layers.get(currentLowerLayerID);
 					for (SoftwareUnitDTO lowerSoftwareUnit : unitsInCurrentLowerLayer) {
 						if (!lowerSoftwareUnit.uniqueName.equals(softwareUnit.uniqueName)) {
-							nrOfSkipCallsFromSoftwareUnitToOtherLayers += queryService.getDependenciesFromSoftwareUnitToSoftwareUnit(softwareUnit.uniqueName, lowerSoftwareUnit.uniqueName).length;
+							nrOfSkipCallsFromSoftwareUnitToOtherLayers += queryService.getDependenciesFromSoftwareUnitToSoftwareUnit(softwareUnit.uniqueName,
+									lowerSoftwareUnit.uniqueName).length;
 						}
 					}
 				}

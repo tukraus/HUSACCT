@@ -132,4 +132,6 @@ public interface IDefineService extends ISaveable, IObservableService {
 	public void addRule(RuleDTO rule);
 
 	public void addRuleWithException(RuleDTO ruleDTO, ModuleStrategy exception);
+	
+	public void resetDefinedArchitecture();
 }

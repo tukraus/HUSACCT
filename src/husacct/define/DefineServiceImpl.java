@@ -344,4 +344,9 @@ public class DefineServiceImpl extends ObservableService implements IDefineServi
 		}
 	}
 
+	public void resetDefinedArchitecture() {
+		reset();
+		isMapped = false;
+	}
+
 }

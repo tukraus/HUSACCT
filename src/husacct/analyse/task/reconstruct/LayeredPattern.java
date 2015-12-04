@@ -13,6 +13,10 @@ public abstract class LayeredPattern extends Pattern {
 		numberOfModules = numberOfLayers;
 		name = "Layered";
 	}
+	public LayeredPattern() {
+		numberOfModules = 3;
+		name = "Layered";
+	}
 
 	@Override
 	public void mapPattern(String[] mapping) {
