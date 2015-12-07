@@ -49,4 +49,10 @@ public class MappingCalculatorTest {
 		assertEquals("FINAL MAPPING SUBLIST NOT THE EXPECTED SIZE", 7, sublist.size());
 	}
 
+	@Test
+	public void Test() {
+		mappingCalculator.findAllSublists(list, 3);
+		List<Integer> sublist = mappingCalculator.next();
+		
+	}
 }
