@@ -19,11 +19,29 @@ import org.jgap.Gene;
 import husacct.ServiceProvider;
 import husacct.analyse.IAnalyseService;
 import husacct.analyse.domain.IModelQueryService;
+import husacct.analyse.task.reconstruct.bruteForce.MappingGenerator;
+import husacct.analyse.task.reconstruct.genetic.GeneticAlgorithm;
+import husacct.analyse.task.reconstruct.patterns.BrokerPattern_CompleteFreedom;
+import husacct.analyse.task.reconstruct.patterns.BrokerPattern_FreeRemainder;
+import husacct.analyse.task.reconstruct.patterns.BrokerPattern_RequesterInterface;
+import husacct.analyse.task.reconstruct.patterns.BrokerPattern_RestrictedRemainder;
+import husacct.analyse.task.reconstruct.patterns.LayeredPattern_CompleteFreedom;
+import husacct.analyse.task.reconstruct.patterns.LayeredPattern_FreeRemainder;
+import husacct.analyse.task.reconstruct.patterns.LayeredPattern_IsolatedInternalLayers;
+import husacct.analyse.task.reconstruct.patterns.LayeredPattern_LayerTypes;
+import husacct.analyse.task.reconstruct.patterns.LayeredPattern_RestrictedRemainder;
+import husacct.analyse.task.reconstruct.patterns.MVCPattern_CompleteFreedom;
+import husacct.analyse.task.reconstruct.patterns.MVCPattern_ControllerInterface;
+import husacct.analyse.task.reconstruct.patterns.MVCPattern_FreeRemainder;
+import husacct.analyse.task.reconstruct.patterns.MVCPattern_RestrictedRemainder;
+import husacct.analyse.task.reconstruct.patterns.Pattern;
 import husacct.common.dto.RuleDTO;
 import husacct.common.dto.SoftwareUnitDTO;
 import husacct.define.DomainToDtoParser;
 import husacct.define.IDefineService;
+import husacct.define.domain.appliedrule.AppliedRuleStrategy;
 import husacct.define.domain.module.ModuleStrategy;
+import husacct.define.domain.services.AppliedRuleDomainService;
 import husacct.validate.IValidateService;
 
 /** Software Architecture Reconstruction based on architectural patterns (i.e. NOT design patterns).
@@ -53,30 +71,38 @@ public class ReconstructArchitecture {
 		defineService = ServiceProvider.getInstance().getDefineService();
 		validateService = ServiceProvider.getInstance().getValidateService();
 		identifyExternalSystems();
-		determineInternalRootPackagesWithClasses();
-		// determineInternalRootPackagesWithClassesIncludingClasses();
-		// If source code is not well structured in a package hierarchy, including individual classes in the root might help.
-
+		// determineInternalRootPackagesWithClasses();
+		determineInternalRootPackagesWithClassesIncludingClasses();
+		// If source code is not well structured in a package hierarchy, including individual classes in the root might help. This can make n way too
+		// big, though, so be careful if you're taking the brute force approach.
 		String pattern = "MVC";
 		int numberOfLayers = 3; // Only matters for N-Layered patterns.
-		boolean remainder = true;
+		boolean remainder = false;
 
 		logger.info("Number of rules before applying patterns: " + defineService.getDefinedRules().length);
 		Pattern currentPattern = null;
 		switch (pattern) {
 			case "Layered":
-				currentPattern = new LayeredPattern_LayerTypes(numberOfLayers);
-				currentPattern.insertPattern();
+				currentPattern = new LayeredPattern_CompleteFreedom(numberOfLayers);
+				// currentPattern = new LayeredPattern_FreeRemainder(numberOfLayers);
+				// currentPattern = new LayeredPattern_IsolatedInternalLayers(numberOfLayers);
+				// currentPattern = new LayeredPattern_LayerTypes(numberOfLayers);
+				// currentPattern = new LayeredPattern_RestrictedRemainder(numberOfLayers);
 				break;
 			case "MVC":
-				currentPattern = new MVCPattern_FreeRemainder();
-				currentPattern.insertPattern();
+				currentPattern = new MVCPattern_CompleteFreedom();
+				// currentPattern = new MVCPattern_ControllerInterface();
+				// currentPattern = new MVCPattern_FreeRemainder();
+				// currentPattern = new MVCPattern_RestrictedRemainder();
 				break;
 			case "Broker":
-				currentPattern = new BrokerPattern_RequesterInterface();
-				currentPattern.insertPattern();
+				currentPattern = new BrokerPattern_CompleteFreedom();
+				// currentPattern = new BrokerPattern_FreeRemainder();
+				// currentPattern = new BrokerPattern_RequesterInterface();
+				// currentPattern = new BrokerPattern_RestrictedRemainder();
 				break;
 		}
+		currentPattern.insertPattern(); // This adds modules and rules (including exceptions if need be) to the intended architecture.
 		logger.info("Number of rules after applying patterns: " + defineService.getDefinedRules().length);
 		if (currentPattern != null) {
 			// TODO: Temporary dialogue window to indicate reconstruction is busy. TO BE REPLACED!
@@ -85,7 +111,7 @@ public class ReconstructArchitecture {
 			dialog.setTitle("Working...");
 			dialog.setAlwaysOnTop(true);
 			dialog.setVisible(true);
-			// bruteForceApproach(currentPattern, aggregates);
+			// bruteForceApproach(currentPattern);
 			geneticApproach(currentPattern, remainder);
 			dialog.setVisible(false);
 		}
@@ -105,7 +131,7 @@ public class ReconstructArchitecture {
 			bestSolutions.addAll(GeneticAlgorithm.run(currentPattern, patternUnitNames, true, this, remainder)); // TODO: print best candidates
 																													// elsewhere.
 			ServiceProvider.getInstance().getControlService().setValidate(false);
-			System.out.println("\n Genetic algorithm termination criteria met. \n");
+			
 			for (int i = 0; i < bestSolutions.size(); i++) {
 				Gene[] genes = bestSolutions.get(i).getGenes();
 				System.out.println("Chromosome " + (i + 1) + ": ");
@@ -127,6 +153,7 @@ public class ReconstructArchitecture {
 		}
 	}
 
+	// At the end, you want the very best solution to actually be placed in the intended architecture again, so that's what happens here.
 	private void placeBestSolutionInIntendedArchitecture(Pattern currentPattern, int[] bestAlleles) {
 		Map<Integer, ArrayList<String>> patternUnitNames = new HashMap<Integer, ArrayList<String>>();
 		for (int i = 0; i < bestAlleles.length; i++) {
@@ -142,7 +169,7 @@ public class ReconstructArchitecture {
 				}
 			}
 		}
-		if (patternUnitNames.keySet().size() == currentPattern.numberOfModules) {
+		if (patternUnitNames.keySet().size() == currentPattern.getNumberOfModules()) {
 			currentPattern.mapPatternAllowingAggregates(patternUnitNames);
 			validatePatternCandidateAllowingAggregates(patternUnitNames);
 			System.out.println("Best candidate was successfully mapped and validated.");
@@ -154,7 +181,7 @@ public class ReconstructArchitecture {
 	 * 
 	 * @param currentPattern
 	 * @param aggregates */
-	private void bruteForceApproach(Pattern currentPattern, boolean aggregates) {
+	private void bruteForceApproach(Pattern currentPattern) {
 		int numberOfTopCandidates = 10;
 		String[] patternUnitNames = new String[internalRootPackagesWithClasses.size()];
 		for (int i = 0; i < patternUnitNames.length; i++)
@@ -245,7 +272,7 @@ public class ReconstructArchitecture {
 			} else
 				System.out.println("Remainder: " + internalRootPackagesWithClasses.get(i).uniqueName);
 		}
-		if (patternUnitNames.keySet().size() == pattern.numberOfModules) {
+		if (patternUnitNames.keySet().size() == pattern.getNumberOfModules()) {
 			pattern.mapPatternAllowingAggregates(patternUnitNames);
 			return determineFitness(validatePatternCandidateAllowingAggregates(patternUnitNames));
 		} else
@@ -289,7 +316,7 @@ public class ReconstructArchitecture {
 		return results;
 	}
 
-	/** Calculate the fitness score for a single candidate.
+	/** Calculate the fitness score for a single candidate, as displayed at the end of a search.
 	 * 
 	 * @param validationResults
 	 * @return */
@@ -302,7 +329,7 @@ public class ReconstructArchitecture {
 		}
 		System.out.println("Number of dependencies: " + validationResults[0][0]);
 		System.out.println("Number of violations: " + sum);
-		return (2 - ((sum) / ((float) validationResults[0][0])));
+		return (2 - ((sum) / ((float) validationResults[0][0]))); 
 	}
 
 	private int[][] validatePatternCandidate(String[] unitNames) {

@@ -1,4 +1,4 @@
-package husacct.analyse.task.reconstruct;
+package husacct.analyse.task.reconstruct.patterns;
 
 public class BrokerPattern_RequesterInterface extends BrokerPattern {
 	// In this interpretation, the Requester acts as an interface for the other two modules.

@@ -1,4 +1,4 @@
-package husacct.analyse.task.reconstruct;
+package husacct.analyse.task.reconstruct.genetic;
 
 import java.util.ArrayList;
 
@@ -12,6 +12,9 @@ import org.jgap.Population;
 import org.jgap.audit.EvolutionMonitor;
 import org.jgap.impl.DefaultConfiguration;
 import org.jgap.impl.IntegerGene;
+
+import husacct.analyse.task.reconstruct.ReconstructArchitecture;
+import husacct.analyse.task.reconstruct.patterns.Pattern;
 
 public class GeneticAlgorithm {
 
@@ -75,11 +78,11 @@ public class GeneticAlgorithm {
 			System.out.println("Too few software units. ");
 		} else if (softwareUnits.length > GeneticFitnessFunction.getMaxBounds())
 			System.out.println("Too many software units. ");
-		else if (currentPattern.numberOfModules > softwareUnits.length)
+		else if (currentPattern.getNumberOfModules() > softwareUnits.length)
 			System.out.println("Too few pattern modules. ");
 		else {
 			numberOfGenes = softwareUnits.length;
-			numberOfModules = currentPattern.numberOfModules;
+			numberOfModules = currentPattern.getNumberOfModules();
 			reconstructArchitecture = reconstruct;
 			pattern = currentPattern;
 			if (remainder)
@@ -89,6 +92,11 @@ public class GeneticAlgorithm {
 									// allele values starting with 0, otherwise they should start with 1. Hence the integer value here.
 		}
 		determineBestCandidates(monitor);
+		System.out.println("Presenting the ordering of software units mapped in the chromosomes: \n");
+		for (int i = 1; i <= softwareUnits.length; i++) {
+			System.out.println(i + ": " + softwareUnits[i-1]);
+		}
+		System.out.println();
 		return bestSolutions;
 	}
 

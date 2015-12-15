@@ -1,4 +1,4 @@
-package husacct.analyse.task.reconstruct;
+package husacct.analyse.task.reconstruct.patterns;
 
 public class BrokerPattern_FreeRemainder extends BrokerPattern {
 	// This version of the Broker pattern allows the Remainder to access any of the three modules, but they can themselves not call upon the rest of

@@ -1,4 +1,4 @@
-package husacct.analyse.task.reconstruct;
+package husacct.analyse.task.reconstruct.patterns;
 
 public class LayeredPattern_IsolatedInternalLayers extends LayeredPattern {
 	// The version of the N-Layered pattern in which the internal layers are isolated from the Remainder.

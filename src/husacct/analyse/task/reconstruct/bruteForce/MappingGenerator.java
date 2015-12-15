@@ -1,4 +1,4 @@
-package husacct.analyse.task.reconstruct;
+package husacct.analyse.task.reconstruct.bruteForce;
 
 import java.util.ArrayList;
 

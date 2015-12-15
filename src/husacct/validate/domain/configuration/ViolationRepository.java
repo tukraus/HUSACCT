@@ -136,7 +136,7 @@ class ViolationRepository {
 	public List<Violation> getViolationsByRule(String moduleFrom, String moduleTo, String ruleTypeKey) {
 		ArrayList<Violation> foundViolations = new ArrayList<Violation>();
 		String searchKey = moduleFrom + "::" + moduleTo + "::" + ruleTypeKey;
-		if(violationsPerRuleTreeMap.containsKey(searchKey)) {
+		if(violationsPerRuleTreeMap.containsKey(searchKey)) { 
 			foundViolations.addAll(violationsPerRuleTreeMap.get(searchKey));
 		}
 		return foundViolations;

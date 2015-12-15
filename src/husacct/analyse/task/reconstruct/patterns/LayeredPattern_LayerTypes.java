@@ -1,4 +1,4 @@
-package husacct.analyse.task.reconstruct;
+package husacct.analyse.task.reconstruct.patterns;
 
 public class LayeredPattern_LayerTypes extends LayeredPattern {
 	// This is the N-Layered pattern with actual layer-type modules and the associated skip-call and back-call bans.

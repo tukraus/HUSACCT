@@ -1,4 +1,4 @@
-package husacct.analyse.task.reconstruct;
+package husacct.analyse.task.reconstruct.patterns;
 
 public class BrokerPattern_RestrictedRemainder extends BrokerPattern {
 	// In this variety of the Broker Pattern, the pattern modules are free to call on the Remainder.

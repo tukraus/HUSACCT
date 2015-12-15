@@ -1,8 +1,11 @@
-package husacct.analyse.task.reconstruct;
+package husacct.analyse.task.reconstruct.genetic;
 
 import org.jgap.FitnessFunction;
 import org.jgap.Gene;
 import org.jgap.IChromosome;
+
+import husacct.analyse.task.reconstruct.ReconstructArchitecture;
+import husacct.analyse.task.reconstruct.patterns.Pattern;
 
 public class GeneticFitnessFunction extends FitnessFunction {
 	

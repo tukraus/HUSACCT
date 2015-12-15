@@ -1,4 +1,4 @@
-package husacct.analyse.task.reconstruct;
+package husacct.analyse.task.reconstruct.patterns;
 
 public class MVCPattern_CompleteFreedom extends MVCPattern {
 	// The version of the MVC pattern in which Model is not allowed to use View, nothing else is restricted.

@@ -337,10 +337,10 @@ public class DefineServiceImpl extends ObservableService implements IDefineServi
 				moduleService.getModuleByLogicalPath(rule.moduleTo.logicalPath), true, false, null);
 		if (rule.ruleTypeKey == "IsTheOnlyModuleAllowedToUse") {
 			ruleService.addExceptionToAppliedRule(parentRuleId, "IsAllowedToUse", "", "", exception, moduleService.getModuleByLogicalPath(rule.moduleTo.logicalPath),
-					null);
+					new String[0]);// Depending on the rule type, moduleTo and moduleFrom may need to be switched around.
 		} else if (rule.ruleTypeKey == "IsOnlyAllowedToUse") {
 			ruleService.addExceptionToAppliedRule(parentRuleId, "IsAllowedToUse", "", "", moduleService.getModuleByLogicalPath(rule.moduleFrom.logicalPath), exception,
-					null);
+					new String[0]);
 		}
 	}
 

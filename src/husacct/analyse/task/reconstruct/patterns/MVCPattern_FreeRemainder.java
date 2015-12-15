@@ -1,4 +1,4 @@
-package husacct.analyse.task.reconstruct;
+package husacct.analyse.task.reconstruct.patterns;
 
 public class MVCPattern_FreeRemainder extends MVCPattern {
 	// The rest of the architecture can access the Model and View modules, but they are themselves restricted to using the Controller.

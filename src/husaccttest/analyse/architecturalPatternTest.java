@@ -9,19 +9,19 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import husacct.ServiceProvider;
-import husacct.analyse.task.reconstruct.BrokerPattern_CompleteFreedom;
-import husacct.analyse.task.reconstruct.BrokerPattern_FreeRemainder;
-import husacct.analyse.task.reconstruct.BrokerPattern_RequesterInterface;
-import husacct.analyse.task.reconstruct.BrokerPattern_RestrictedRemainder;
-import husacct.analyse.task.reconstruct.LayeredPattern_CompleteFreedom;
-import husacct.analyse.task.reconstruct.LayeredPattern_FreeRemainder;
-import husacct.analyse.task.reconstruct.LayeredPattern_IsolatedInternalLayers;
-import husacct.analyse.task.reconstruct.LayeredPattern_RestrictedRemainder;
-import husacct.analyse.task.reconstruct.MVCPattern_CompleteFreedom;
-import husacct.analyse.task.reconstruct.MVCPattern_ControllerInterface;
-import husacct.analyse.task.reconstruct.MVCPattern_FreeRemainder;
-import husacct.analyse.task.reconstruct.MVCPattern_RestrictedRemainder;
-import husacct.analyse.task.reconstruct.Pattern;
+import husacct.analyse.task.reconstruct.patterns.BrokerPattern_CompleteFreedom;
+import husacct.analyse.task.reconstruct.patterns.BrokerPattern_FreeRemainder;
+import husacct.analyse.task.reconstruct.patterns.BrokerPattern_RequesterInterface;
+import husacct.analyse.task.reconstruct.patterns.BrokerPattern_RestrictedRemainder;
+import husacct.analyse.task.reconstruct.patterns.LayeredPattern_CompleteFreedom;
+import husacct.analyse.task.reconstruct.patterns.LayeredPattern_FreeRemainder;
+import husacct.analyse.task.reconstruct.patterns.LayeredPattern_IsolatedInternalLayers;
+import husacct.analyse.task.reconstruct.patterns.LayeredPattern_RestrictedRemainder;
+import husacct.analyse.task.reconstruct.patterns.MVCPattern_CompleteFreedom;
+import husacct.analyse.task.reconstruct.patterns.MVCPattern_ControllerInterface;
+import husacct.analyse.task.reconstruct.patterns.MVCPattern_FreeRemainder;
+import husacct.analyse.task.reconstruct.patterns.MVCPattern_RestrictedRemainder;
+import husacct.analyse.task.reconstruct.patterns.Pattern;
 import husacct.define.IDefineService;
 
 public class architecturalPatternTest {

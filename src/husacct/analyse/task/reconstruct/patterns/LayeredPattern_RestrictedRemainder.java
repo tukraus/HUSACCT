@@ -1,4 +1,4 @@
-package husacct.analyse.task.reconstruct;
+package husacct.analyse.task.reconstruct.patterns;
 
 public class LayeredPattern_RestrictedRemainder extends LayeredPattern {
 	// An interpretation of the N-Layered pattern in which the layers can call upon the Remainder, but not vice versa.

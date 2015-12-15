@@ -1,4 +1,4 @@
-package husacct.analyse.task.reconstruct;
+package husacct.analyse.task.reconstruct.patterns;
 
 public class LayeredPattern_CompleteFreedom extends LayeredPattern {
 	// The interpretation of the N-Layered pattern for which there exist no restriction for the Remainder to use the layers.

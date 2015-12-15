@@ -1,4 +1,4 @@
-package husacct.analyse.task.reconstruct;
+package husacct.analyse.task.reconstruct.patterns;
 
 public class LayeredPattern_FreeRemainder extends LayeredPattern {
 	// The version of the N-Layered pattern where the Remainder can all on any layer, though all but the final layer cannot call on the Remainder.

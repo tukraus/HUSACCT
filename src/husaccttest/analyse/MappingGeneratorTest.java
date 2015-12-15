@@ -5,7 +5,7 @@ import static org.junit.Assert.assertEquals;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import husacct.analyse.task.reconstruct.MappingGenerator;
+import husacct.analyse.task.reconstruct.bruteForce.MappingGenerator;
 
 public class MappingGeneratorTest {
 	private static MappingGenerator mg;
