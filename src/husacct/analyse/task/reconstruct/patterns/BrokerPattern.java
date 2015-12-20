@@ -24,16 +24,16 @@ public abstract class BrokerPattern extends Pattern {
 	}
 
 	@Override
-	public void mapPattern(String[] mapping) {
+	public void mapPattern(ArrayList<String> mapping) {
 		IAnalyseService analyseService = ServiceProvider.getInstance().getAnalyseService();
 		ArrayList<SoftwareUnitDTO> temp = new ArrayList<>(1);
-		temp.add(analyseService.getSoftwareUnitByUniqueName(mapping[0]));
+		temp.add(analyseService.getSoftwareUnitByUniqueName(mapping.get(0)));
 		defineService.editModule("Broker", "Broker", 1, temp);
 		temp.clear();
-		temp.add(analyseService.getSoftwareUnitByUniqueName(mapping[1]));
+		temp.add(analyseService.getSoftwareUnitByUniqueName(mapping.get(1)));
 		defineService.editModule("Provider", "Provider", 1, temp);
 		temp.clear();
-		temp.add(analyseService.getSoftwareUnitByUniqueName(mapping[2]));
+		temp.add(analyseService.getSoftwareUnitByUniqueName(mapping.get(2)));
 		defineService.editModule("Requester", "Requester", 1, temp);
 	}
 

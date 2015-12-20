@@ -19,11 +19,11 @@ public abstract class LayeredPattern extends Pattern {
 	}
 
 	@Override
-	public void mapPattern(String[] mapping) {
+	public void mapPattern(ArrayList<String> mapping) {
 		IAnalyseService analyseService = ServiceProvider.getInstance().getAnalyseService();
 		ArrayList<SoftwareUnitDTO> temp = new ArrayList<>(1);
-		for (int i = 1; i <= mapping.length; i++) {
-			temp.add(analyseService.getSoftwareUnitByUniqueName(mapping[i - 1]));
+		for (int i = 1; i <= mapping.size(); i++) {
+			temp.add(analyseService.getSoftwareUnitByUniqueName(mapping.get(i-1)));
 			defineService.editModule("Layer" + i, "Layer" + i, i, temp);
 			temp.clear();
 		}

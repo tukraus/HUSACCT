@@ -1,6 +1,7 @@
 package husacct.analyse.task.reconstruct.bruteForce;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 
 // This MappingGenerator provides you with all the permutations by which a group of size N can be arranged into groups of size r.
 // This is simply a multiplication of the number of combinations in one respect, the number of ways N can be split into groups of size r,
@@ -12,10 +13,13 @@ public class MappingGenerator {
 	private static int Slots;
 	private static String[] PackageList;
 	private static ArrayList<ArrayList<String>> permutations = new ArrayList<ArrayList<String>>();
+	private static Iterator<ArrayList<String>> mappingIterator;
 
-	public MappingGenerator(int numberOfModules, String[] packageList) {
+	public MappingGenerator(String[] packageList, int numberOfModules) {
 		Slots = numberOfModules;
 		PackageList = packageList;
+		getPermutations();
+		mappingIterator = permutations.iterator();
 	}
 
 	private static void addToPermutations(ArrayList<ArrayList<Integer>> arrayList) {
@@ -80,5 +84,16 @@ public class MappingGenerator {
 			result = new ArrayList<ArrayList<Integer>>(current);
 		}
 		return result;
+	}
+
+	public ArrayList<String> next() {
+		if (mappingIterator.hasNext()) {
+			return (ArrayList<String>) mappingIterator.next();
+		} else
+			return null;
+	}
+
+	public ArrayList<String> getMapping(int i) {
+		return (ArrayList<String>) permutations.get(i);
 	}
 }

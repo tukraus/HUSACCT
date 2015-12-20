@@ -22,16 +22,16 @@ public abstract class MVCPattern extends Pattern {
 	}
 
 	@Override
-	public void mapPattern(String[] mapping) {
+	public void mapPattern(ArrayList<String> mapping) {
 		IAnalyseService analyseService = ServiceProvider.getInstance().getAnalyseService();
 		ArrayList<SoftwareUnitDTO> temp = new ArrayList<>(1);
-		temp.add(analyseService.getSoftwareUnitByUniqueName(mapping[0]));
+		temp.add(analyseService.getSoftwareUnitByUniqueName(mapping.get(0)));
 		defineService.editModule("Model", "Model", 1, temp);
 		temp.clear();
-		temp.add(analyseService.getSoftwareUnitByUniqueName(mapping[1]));
+		temp.add(analyseService.getSoftwareUnitByUniqueName(mapping.get(1)));
 		defineService.editModule("View", "View", 1, temp);
 		temp.clear();
-		temp.add(analyseService.getSoftwareUnitByUniqueName(mapping[2]));
+		temp.add(analyseService.getSoftwareUnitByUniqueName(mapping.get(2)));
 		defineService.editModule("Controller", "Controller", 1, temp);
 	}
 

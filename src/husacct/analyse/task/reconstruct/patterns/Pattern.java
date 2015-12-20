@@ -38,7 +38,7 @@ public abstract class Pattern {
 	}
 
 	// Map specific SoftwareUnitDTOs from the analysed application to the defined pattern modules.
-	public abstract void mapPattern(String[] mapping);
+	public abstract void mapPattern(ArrayList<String> patternNames);
 
 	protected void addRule(ModuleStrategy moduleTo, ModuleStrategy moduleFrom, String ruleType) {
 		defineService.addRule(new RuleDTO(ruleType, true, domainParser.parseModule(moduleTo), domainParser.parseModule(moduleFrom), new String[0], "", null, false));
