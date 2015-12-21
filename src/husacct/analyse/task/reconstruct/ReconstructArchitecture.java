@@ -20,7 +20,7 @@ import husacct.analyse.task.reconstruct.bruteForce.AggregateMappingGenerator;
 import husacct.analyse.task.reconstruct.bruteForce.MappingGenerator;
 import husacct.analyse.task.reconstruct.genetic.GeneticAlgorithm;
 import husacct.analyse.task.reconstruct.patterns.BrokerPattern_CompleteFreedom;
-import husacct.analyse.task.reconstruct.patterns.LayeredPattern_CompleteFreedom;
+import husacct.analyse.task.reconstruct.patterns.LayeredPattern_FreeRemainder;
 import husacct.analyse.task.reconstruct.patterns.MVCPattern_FreeRemainder;
 import husacct.analyse.task.reconstruct.patterns.Pattern;
 import husacct.common.dto.RuleDTO;
@@ -57,12 +57,12 @@ public class ReconstructArchitecture {
 		defineService = ServiceProvider.getInstance().getDefineService();
 		validateService = ServiceProvider.getInstance().getValidateService();
 		identifyExternalSystems();
-		// determineInternalRootPackagesWithClasses();
-		determineInternalRootPackagesWithClassesIncludingClasses();
+		determineInternalRootPackagesWithClasses();
+		// determineInternalRootPackagesWithClassesIncludingClasses();
 		// If source code is not well structured in a package hierarchy, including individual classes in the root might help. This can make n way too
 		// big, though, so be careful if you're taking the brute force approach. This may cause memory issues.
 
-		boolean aggregation = true;
+		boolean aggregation = false;
 		boolean remainder = false; // Only relevant if aggregation = true.
 
 		String pattern = "Layered";
@@ -72,8 +72,8 @@ public class ReconstructArchitecture {
 		Pattern currentPattern = null;
 		switch (pattern) {
 			case "Layered":
-				currentPattern = new LayeredPattern_CompleteFreedom(numberOfLayers);
-				// currentPattern = new LayeredPattern_FreeRemainder(numberOfLayers);
+				// currentPattern = new LayeredPattern_CompleteFreedom(numberOfLayers);
+				currentPattern = new LayeredPattern_FreeRemainder(numberOfLayers);
 				// currentPattern = new LayeredPattern_IsolatedInternalLayers(numberOfLayers);
 				// currentPattern = new LayeredPattern_LayerTypes(numberOfLayers);
 				// currentPattern = new LayeredPattern_RestrictedRemainder(numberOfLayers);
@@ -171,12 +171,6 @@ public class ReconstructArchitecture {
 		ServiceProvider.getInstance().getControlService().setValidate(false);
 		sortCandidates(candidateScores);
 		logger.info("Done \n");
-		logger.info("ALL CANDIDATE PATTERNS HAVE BEEN VALIDATED FOR ONE ARCHITECTURAL PATTERN IN THE PROVIDED PACKAGE DEFINITIONS.");
-		if (currentPattern.getName() == "Layered")
-			logger.info("Selected architectural pattern: " + currentPattern.getNumberOfModules() + " Layered");
-		else
-			logger.info("Selected architectural pattern: " + currentPattern.getName());
-		logger.info("Number of software units to map to the pattern: " + internalRootPackagesWithClasses.size());
 		logger.info("Best " + numberOfTopCandidates + " candidates: ");
 		ArrayList<String> bestMapping;
 		for (int i = 0; i < numberOfTopCandidates; i++) {
@@ -212,7 +206,7 @@ public class ReconstructArchitecture {
 
 	// This is the aggregation case of the brute force approach.
 	private void aggregationBruteForce(Pattern currentPattern, int numberOfTopCandidates, String[] patternUnitNames, boolean remainder) {
-		AggregateMappingGenerator mapCal = new AggregateMappingGenerator(patternUnitNames, currentPattern.getNumberOfModules(), remainder);
+		AggregateMappingGenerator mapCal = new AggregateMappingGenerator(patternUnitNames, currentPattern.getNumberOfModules(), false);
 		Map<Integer, ArrayList<String>> patternMapping = new HashMap<Integer, ArrayList<String>>();
 		// Although this is the brute force approach and not the genetic, the same genetic encoding is used for the mapping here.
 
@@ -228,32 +222,53 @@ public class ReconstructArchitecture {
 			for (int i = 0; i < map.size(); i++) {
 				patternMapping.put(i, (ArrayList<String>) map.get(i));
 			}
-			// This is where validation is requested and a top 10 is generated.
 			currentPattern.mapPatternAllowingAggregates(patternMapping);
 			fitness = determineFitness(validatePatternCandidateAllowingAggregates(patternMapping));
 			lowestTopFitness = keepScore(numberOfTopCandidates, candidateScores, fitness, lowestTopFitness, candidateNumber);
 			candidateNumber++;
+			System.out.println("Candidate number: " + candidateNumber);
 		}
-
+		sortCandidates(candidateScores);
+		int remainderNumber = candidateNumber;
+		AggregateMappingGenerator mapCalRemainder = null;
+		if (remainder) {
+			System.out.println("HERE STARTS THE REMAINDER LOOP.");
+			mapCalRemainder = new AggregateMappingGenerator(patternUnitNames, currentPattern.getNumberOfModules(), remainder);
+			while (true) {
+				List<List<String>> map = mapCalRemainder.next();
+				if (map == null)
+					break;
+				for (int i = 0; i < map.size(); i++) {
+					patternMapping.put(i, (ArrayList<String>) map.get(i));
+				}
+				currentPattern.mapPatternAllowingAggregates(patternMapping);
+				fitness = determineFitness(validatePatternCandidateAllowingAggregates(patternMapping));
+				lowestTopFitness = keepScore(numberOfTopCandidates, candidateScores, fitness, lowestTopFitness, candidateNumber);
+				candidateNumber++;
+				System.out.println("Candidate number: " + candidateNumber);
+			}
+			sortCandidates(candidateScores);
+		}
 		ServiceProvider.getInstance().getControlService().setValidate(false);
 		logger.info("Done \n");
-		logger.info("ALL CANDIDATE PATTERNS HAVE BEEN VALIDATED FOR ONE ARCHITECTURAL PATTERN IN THE PROVIDED PACKAGE DEFINITIONS.");
-		if (currentPattern.getName() == "Layered")
-			logger.info("Selected architectural pattern: " + currentPattern.getNumberOfModules() + " Layered");
-		else
-			logger.info("Selected architectural pattern: " + currentPattern.getName());
-		logger.info("Number of software units to map to the pattern: " + internalRootPackagesWithClasses.size());
 		logger.info("Best " + numberOfTopCandidates + " candidates: ");
-		List<List<String>> bestMapping;
+		Map<Integer, ArrayList<String>> bestmapping = new HashMap<>();
 		for (int i = 0; i < numberOfTopCandidates; i++) {
 			// A fitness score between 0 and 1 is more intuitive for the output, but the genetic algorithm requires 1.0 to be the lowest score.
-			bestMapping = mapCal.getMapping((int) candidateScores[i][1]);
-			logger.info("Fitness score: " + (candidateScores[i][0] - 1) + ". Mapped software units unique names: " + bestMapping);
+			if ((int) candidateScores[i][1] < remainderNumber)
+				bestmapping = mapCal.getMappingMap((int) candidateScores[i][1]);
+			else
+				bestmapping = mapCalRemainder.getMappingMap((int) candidateScores[i][1] - remainderNumber);
+			logger.info("Fitness score: " + (candidateScores[i][0] - 1) + ". Mapped software units unique names: " + bestmapping);
 		}
-		bestMapping = mapCal.getMapping((int) candidateScores[numberOfTopCandidates - 1][1]);
-		// currentPattern.mapPattern(bestMapping);
+		if ((int) candidateScores[numberOfTopCandidates - 1][1] < remainderNumber) {
+			bestmapping = mapCal.getMappingMap((int) candidateScores[numberOfTopCandidates - 1][1]);
+			currentPattern.mapPatternAllowingAggregates(bestmapping);
+		} else {
+			bestmapping = mapCalRemainder.getMappingMap((int) candidateScores[numberOfTopCandidates - 1][1] - remainderNumber);
+			currentPattern.mapPatternAllowingAggregates(bestmapping);
+		}
 		logger.info("This last mapping was selected for the intended architecture by default.");
-
 	}
 
 	/** Fitness scores are calculated for a chromosome. This allows for aggregation (multiple SUs in one pattern module).
@@ -284,7 +299,8 @@ public class ReconstructArchitecture {
 			return -1;
 	}
 
-	/** Calculate the fitness score for a single candidate, as displayed at the end of a search.
+	/** Calculate the fitness score for a single candidate, as displayed at the end of a search. This works for all cases (aggregate/remainder,
+	 * genetic/brute force).
 	 * 
 	 * @param validationResults
 	 * @return */
@@ -355,9 +371,13 @@ public class ReconstructArchitecture {
 		int[] totalNumberOfDependencies = new int[1];
 		for (int j = 0; j < patternUnitNames.size(); j++) {
 			for (String name : patternUnitNames.get(j)) {
-				for (String otherName : patternUnitNames.get(j)) {
-					if (name != otherName)
-						totalNumberOfDependencies[0] += getNumberofDependenciesBetweenSoftwareUnits(name, otherName);
+				for (int k = 0; k < patternUnitNames.size(); k++) {
+					for (String otherName : patternUnitNames.get(k)) {
+						if (j != k) {
+							if (name != otherName)
+								totalNumberOfDependencies[0] += getNumberofDependenciesBetweenSoftwareUnits(name, otherName);
+						}
+					}
 				}
 			}
 		}
@@ -428,6 +448,7 @@ public class ReconstructArchitecture {
 
 	/** Determine which packages form the root of the source code hierarchy, excluding single classes. If there is just a single package in that root,
 	 * this package becomes the root and packages are identified within it. */
+	@SuppressWarnings("unused")
 	private void determineInternalRootPackagesWithClasses() {
 		internalRootPackagesWithClasses = new ArrayList<SoftwareUnitDTO>();
 		SoftwareUnitDTO[] allRootUnits = queryService.getSoftwareUnitsInRoot(); // Get all root units
@@ -453,6 +474,7 @@ public class ReconstructArchitecture {
 
 	/** Determine which packages form the root of the source code hierarchy, including single classes. If there is just a single package in that root,
 	 * this package becomes the root and packages are identified within it. */
+	@SuppressWarnings("unused")
 	private void determineInternalRootPackagesWithClassesIncludingClasses() {
 		internalRootPackagesWithClasses = new ArrayList<SoftwareUnitDTO>();
 		SoftwareUnitDTO[] allRootUnits = queryService.getSoftwareUnitsInRoot(); // Get all root units

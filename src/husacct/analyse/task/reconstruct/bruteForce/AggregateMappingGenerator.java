@@ -4,8 +4,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 // Calculating all possible mappings in the aggregation case is a bit of a pain. The current implementation can undoubtedly be sped up, possibly
 // by the use of sets instead of lists whenever we don't care about ordering. This I reserve for future improvements. The crucial step in slowing down
@@ -18,10 +20,12 @@ public class AggregateMappingGenerator {
 	Iterator<ArrayList<Integer>> permutationIterator;
 	int numberOfGroups;
 	int currentMappingSize;
+	boolean isThereARemainder;
 
 	// Constructor
 	public AggregateMappingGenerator(String[] packageNames, int numberOfPatternModules, boolean remainder) {
 		numberOfGroups = numberOfPatternModules;
+		isThereARemainder = remainder;
 		if (remainder)
 			numberOfGroups++; // Call this class once with and once without remainder to get all possible mappings.
 		List<Integer> listSU = convertToIntegers(packageNames);
@@ -131,7 +135,6 @@ public class AggregateMappingGenerator {
 					l.remove(j);
 				}
 			}
-			System.out.println(current);
 			result = new ArrayList<ArrayList<Integer>>(current);
 		}
 		return result;
@@ -163,12 +166,24 @@ public class AggregateMappingGenerator {
 			}
 			mapping.add(i, temp);
 		}
+
+		if (isThereARemainder)
+			mapping.remove(numberOfGroups - 1);
 		currentMappingSize++;
 		return mapping;
 	}
 
-	public List<List<String>> getMapping(int i) {
-		return convertBack(finalResult.get(i));
+	public Map<Integer, ArrayList<String>> getMappingMap(int i) {
+		Map<Integer, ArrayList<String>> map = new HashMap<>();
+		List<List<String>> bestOne = convertBack(finalResult.get(i));
+		for (int j = 0; j < bestOne.size(); j++) {
+			ArrayList<String> temp = new ArrayList<String>();
+			for (int k = 0; k < bestOne.get(j).size(); k++) {
+				temp.add(bestOne.get(j).get(k));
+			}
+			map.put(j, temp);
+		}
+		return map;
 	}
 
 }
