@@ -20,7 +20,7 @@ import husacct.analyse.task.reconstruct.bruteForce.AggregateMappingGenerator;
 import husacct.analyse.task.reconstruct.bruteForce.MappingGenerator;
 import husacct.analyse.task.reconstruct.genetic.GeneticAlgorithm;
 import husacct.analyse.task.reconstruct.patterns.BrokerPattern_CompleteFreedom;
-import husacct.analyse.task.reconstruct.patterns.LayeredPattern_FreeRemainder;
+import husacct.analyse.task.reconstruct.patterns.LayeredPattern_LayerTypes;
 import husacct.analyse.task.reconstruct.patterns.MVCPattern_FreeRemainder;
 import husacct.analyse.task.reconstruct.patterns.Pattern;
 import husacct.common.dto.RuleDTO;
@@ -41,6 +41,7 @@ public class ReconstructArchitecture {
 	private IValidateService validateService;
 	private ArrayList<SoftwareUnitDTO> internalRootPackagesWithClasses;
 	// The first packages starting from the project root) that contain one or more classes.
+
 	// External system variables
 	private String xLibrariesRootPackage = "xLibraries";
 	private ArrayList<SoftwareUnitDTO> xLibrariesMainPackages = new ArrayList<SoftwareUnitDTO>();
@@ -73,9 +74,9 @@ public class ReconstructArchitecture {
 		switch (pattern) {
 			case "Layered":
 				// currentPattern = new LayeredPattern_CompleteFreedom(numberOfLayers);
-				currentPattern = new LayeredPattern_FreeRemainder(numberOfLayers);
+				// currentPattern = new LayeredPattern_FreeRemainder(numberOfLayers);
 				// currentPattern = new LayeredPattern_IsolatedInternalLayers(numberOfLayers);
-				// currentPattern = new LayeredPattern_LayerTypes(numberOfLayers);
+				currentPattern = new LayeredPattern_LayerTypes(numberOfLayers);
 				// currentPattern = new LayeredPattern_RestrictedRemainder(numberOfLayers);
 				break;
 			case "MVC":
@@ -94,8 +95,8 @@ public class ReconstructArchitecture {
 		currentPattern.insertPattern(); // This adds modules and rules (including exceptions if need be) to the intended architecture.
 		logger.info("Number of rules after applying patterns: " + defineService.getDefinedRules().length);
 		if (currentPattern != null) {
-			bruteForceApproach(currentPattern, remainder, aggregation);
-			// geneticApproach(currentPattern, remainder);
+			// bruteForceApproach(currentPattern, remainder, aggregation);
+			geneticApproach(currentPattern, remainder);
 		}
 	}
 
@@ -154,16 +155,16 @@ public class ReconstructArchitecture {
 	private void simpleBruteForce(Pattern currentPattern, int numberOfTopCandidates, String[] patternUnitNames) {
 		MappingGenerator mapgen = new MappingGenerator(patternUnitNames, currentPattern.getNumberOfModules());
 		ArrayList<String> patternNames = new ArrayList<String>(currentPattern.getNumberOfModules());
-		float[][] candidateScores = new float[numberOfTopCandidates][2];
-		float fitness = 0;
-		float lowestTopFitness = 0;
+		double[][] candidateScores = new double[numberOfTopCandidates][2];
+		double fitness = 0;
+		double lowestTopFitness = 0;
 		ServiceProvider.getInstance().getControlService().setValidate(true);
 		patternNames = mapgen.next();
 		int candidateNumber = 0;
 		while (patternNames != null) {
 			// This is where validation is requested and a top 10 is generated.
 			currentPattern.mapPattern(patternNames);
-			fitness = determineFitness(validatePatternCandidate(patternNames));
+			fitness = determineFitnessF1(validatePatternCandidateSimple(patternNames));
 			lowestTopFitness = keepScore(numberOfTopCandidates, candidateScores, fitness, lowestTopFitness, candidateNumber);
 			patternNames = mapgen.next();
 			candidateNumber++;
@@ -174,16 +175,15 @@ public class ReconstructArchitecture {
 		logger.info("Best " + numberOfTopCandidates + " candidates: ");
 		ArrayList<String> bestMapping;
 		for (int i = 0; i < numberOfTopCandidates; i++) {
-			// A fitness score between 0 and 1 is more intuitive for the output, but the genetic algorithm requires 1.0 to be the lowest score.
 			bestMapping = mapgen.getMapping((int) candidateScores[i][1]);
-			logger.info("Fitness score: " + (candidateScores[i][0] - 1) + ". Mapped software units unique names: " + bestMapping);
+			logger.info("Fitness score: " + (candidateScores[i][0]) + ". Mapped software units unique names: " + bestMapping);
 		}
 		bestMapping = mapgen.getMapping((int) candidateScores[numberOfTopCandidates - 1][1]);
 		currentPattern.mapPattern(bestMapping);
 		logger.info("This last mapping was selected for the intended architecture by default.");
 	}
 
-	private float keepScore(int numberOfTopCandidates, float[][] candidateScores, float fitness, float lowestTopFitness, int i) {
+	private double keepScore(int numberOfTopCandidates, double[][] candidateScores, double fitness, double lowestTopFitness, int i) {
 		if (fitness == -1)
 			return lowestTopFitness;
 		if (i > numberOfTopCandidates - 1) {
@@ -210,9 +210,9 @@ public class ReconstructArchitecture {
 		Map<Integer, ArrayList<String>> patternMapping = new HashMap<Integer, ArrayList<String>>();
 		// Although this is the brute force approach and not the genetic, the same genetic encoding is used for the mapping here.
 
-		float[][] candidateScores = new float[numberOfTopCandidates][2];
-		float fitness = 0;
-		float lowestTopFitness = 0;
+		double[][] candidateScores = new double[numberOfTopCandidates][2];
+		double fitness = 0;
+		double lowestTopFitness = 0;
 		ServiceProvider.getInstance().getControlService().setValidate(true);
 		int candidateNumber = 0;
 		while (true) {
@@ -223,7 +223,7 @@ public class ReconstructArchitecture {
 				patternMapping.put(i, (ArrayList<String>) map.get(i));
 			}
 			currentPattern.mapPatternAllowingAggregates(patternMapping);
-			fitness = determineFitness(validatePatternCandidateAllowingAggregates(patternMapping));
+			fitness = determineFitnessF1(validatePatternCandidateAggregation(patternMapping));
 			lowestTopFitness = keepScore(numberOfTopCandidates, candidateScores, fitness, lowestTopFitness, candidateNumber);
 			candidateNumber++;
 			System.out.println("Candidate number: " + candidateNumber);
@@ -242,7 +242,7 @@ public class ReconstructArchitecture {
 					patternMapping.put(i, (ArrayList<String>) map.get(i));
 				}
 				currentPattern.mapPatternAllowingAggregates(patternMapping);
-				fitness = determineFitness(validatePatternCandidateAllowingAggregates(patternMapping));
+				fitness = determineFitnessF1(validatePatternCandidateAggregation(patternMapping));
 				lowestTopFitness = keepScore(numberOfTopCandidates, candidateScores, fitness, lowestTopFitness, candidateNumber);
 				candidateNumber++;
 				System.out.println("Candidate number: " + candidateNumber);
@@ -259,7 +259,7 @@ public class ReconstructArchitecture {
 				bestmapping = mapCal.getMappingMap((int) candidateScores[i][1]);
 			else
 				bestmapping = mapCalRemainder.getMappingMap((int) candidateScores[i][1] - remainderNumber);
-			logger.info("Fitness score: " + (candidateScores[i][0] - 1) + ". Mapped software units unique names: " + bestmapping);
+			logger.info("Fitness score: " + (candidateScores[i][0]) + ". Mapped software units unique names: " + bestmapping);
 		}
 		if ((int) candidateScores[numberOfTopCandidates - 1][1] < remainderNumber) {
 			bestmapping = mapCal.getMappingMap((int) candidateScores[numberOfTopCandidates - 1][1]);
@@ -276,7 +276,7 @@ public class ReconstructArchitecture {
 	 * @param pattern
 	 * @param alleles
 	 * @return */
-	public float getFitnessScore(Pattern pattern, int[] alleles) {
+	public double getFitnessScore(Pattern pattern, int[] alleles) {
 		Map<Integer, ArrayList<String>> patternUnitNames = new HashMap<Integer, ArrayList<String>>();
 		for (int i = 0; i < alleles.length; i++) {
 			if (alleles[i] != 0) {
@@ -294,7 +294,7 @@ public class ReconstructArchitecture {
 		}
 		if (patternUnitNames.keySet().size() == pattern.getNumberOfModules()) {
 			pattern.mapPatternAllowingAggregates(patternUnitNames);
-			return determineFitness(validatePatternCandidateAllowingAggregates(patternUnitNames));
+			return determineFitnessF1(validatePatternCandidateAggregation(patternUnitNames)) + 1;
 		} else
 			return -1;
 	}
@@ -316,77 +316,225 @@ public class ReconstructArchitecture {
 		return (2 - ((sum) / ((float) validationResults[0][0])));
 	}
 
-	private int[][] validatePatternCandidate(ArrayList<String> patternNames) {
-		int[][] results = new int[2][6];
-		validateService.checkConformance();
-		int[] numberOfViolations = new int[6];
-		int i = 6;
-		for (RuleDTO currentAppliedRule : defineService.getDefinedRules()) {
-			i = determineCategoryIndex(currentAppliedRule.ruleTypeKey);
-			if (i == 0) {
-				if (validateService.getViolationsByRule(currentAppliedRule).length != 0) {
-					logger.info("Candidate was excluded due to violation of MustUse rule(s)");
-					results[0] = null;
-					results[1] = null;
-					return results;
-				}
-			} else if (i != 6)
-				numberOfViolations[i] += validateService.getViolationsByRule(currentAppliedRule).length;
-		}
-		int[] totalNumberOfDependencies = new int[1];
-		for (String name : patternNames) {
-			for (String otherName : patternNames) {
-				if (name != otherName)
-					totalNumberOfDependencies[0] += getNumberofDependenciesBetweenSoftwareUnits(name, otherName);
-			}
-		}
-		// logger.info("Number of dependencies within pattern: " + totalNumberOfDependencies[0] + ", resulting in a total of "
-		// + IntStream.of(numberOfViolations).sum() + " violations.");
-		results[0] = totalNumberOfDependencies;
-		results[1] = numberOfViolations;
-		return results;
+	private double determineFitnessF1(int[][] validationResults) {
+		if (validationResults[0] == null)
+			return -1; // In case of excluded candidate.
+		double sum = 0;
+		for (int i = 0; i < validationResults[1].length; i++)
+			sum += validationResults[1][i];
+		double nvScore = 1 - sum / (validationResults[0][0] - validationResults[2][0]); // nvScore is based on the relative number of violations.
+		if (!(nvScore >= 0))
+			nvScore = 1;
+		double nmScore = validationResults[2][0] / validationResults[0][0];
+		return 2 * nvScore * nmScore / (nvScore + nmScore);
 	}
 
-	/** A particular pattern candidate is validated while allowing for multiple software units assigned to the same pattern module.
-	 * 
-	 * @param patternUnitNames
-	 * @return */
-	private int[][] validatePatternCandidateAllowingAggregates(Map<Integer, ArrayList<String>> patternUnitNames) {
-		int[][] results = new int[2][6];
-		validateService.checkConformance();
-		int[] numberOfViolations = new int[6];
+	// private int[][] validatePatternCandidate(ArrayList<String> patternNames) {
+	// int[][] results = new int[2][6];
+	// validateService.checkConformance();
+	// int[] numberOfViolations = new int[6];
+	// int i = 6;
+	// for (RuleDTO currentAppliedRule : defineService.getDefinedRules()) {
+	// i = determineCategoryIndex(currentAppliedRule.ruleTypeKey);
+	// if (i == 0) {
+	// if (validateService.getViolationsByRule(currentAppliedRule).length != 0) {
+	// logger.info("Candidate was excluded due to violation of MustUse rule(s)");
+	// results[0] = null;
+	// results[1] = null;
+	// return results;
+	// }
+	// } else if (i != 6)
+	// numberOfViolations[i] += validateService.getViolationsByRule(currentAppliedRule).length;
+	// }
+	// int[] totalNumberOfDependencies = new int[1];
+	// for (String name : patternNames) {
+	// for (String otherName : patternNames) {
+	// if (name != otherName)
+	// totalNumberOfDependencies[0] += getNumberofDependenciesBetweenSoftwareUnits(name, otherName);
+	// }
+	// }
+	// // logger.info("Number of dependencies within pattern: " + totalNumberOfDependencies[0] + ", resulting in a total of "
+	// // + IntStream.of(numberOfViolations).sum() + " violations.");
+	// results[0] = totalNumberOfDependencies;
+	// results[1] = numberOfViolations;
+	// return results;
+	// }
+
+	// This calculates the numbers necessary for determining the fitness score in the non-aggregation case.
+	private int[][] validatePatternCandidateSimple(ArrayList<String> patternNames) {
+		int[][] results = new int[3][];
+		int numberOfDependencies = 0;
+		int[] numberOfViolations = new int[7];
+		int numberOfMustUseAffirmations = 0;
 		int i = 6;
+		ArrayList<String> remainderUnits = new ArrayList<String>(internalRootPackagesWithClasses.size());
+		for (SoftwareUnitDTO unit : internalRootPackagesWithClasses) {
+			if (!patternNames.contains(unit.uniqueName))
+				remainderUnits.add(unit.uniqueName);
+		}
+		validateService.checkConformance();
 		for (RuleDTO currentAppliedRule : defineService.getDefinedRules()) {
 			i = determineCategoryIndex(currentAppliedRule.ruleTypeKey);
-			if (i == 0) {
+			if (i == 0) { // If the number of MustUse violations is zero, that's good.
 				if (validateService.getViolationsByRule(currentAppliedRule).length != 0) {
 					logger.info("Candidate was excluded due to violation of MustUse rule(s)");
 					results[0] = null;
 					results[1] = null;
+					results[2] = null;
 					return results;
-				}
-			} else if (i != 6)
-				numberOfViolations[i] += validateService.getViolationsByRule(currentAppliedRule).length;
-		}
-		int[] totalNumberOfDependencies = new int[1];
-		for (int j = 0; j < patternUnitNames.size(); j++) {
-			for (String name : patternUnitNames.get(j)) {
-				for (int k = 0; k < patternUnitNames.size(); k++) {
-					for (String otherName : patternUnitNames.get(k)) {
-						if (j != k) {
-							if (name != otherName)
-								totalNumberOfDependencies[0] += getNumberofDependenciesBetweenSoftwareUnits(name, otherName);
+				} else {
+					for (String name : patternNames) {
+						if (currentAppliedRule.moduleFrom.logicalPath.equals(defineService.getModule_BasedOnSoftwareUnitName(name).logicalPath)) {
+							for (String other : patternNames) {
+								if (currentAppliedRule.moduleTo.logicalPath.equals(defineService.getModule_BasedOnSoftwareUnitName(other).logicalPath)) {
+									numberOfMustUseAffirmations += getNumberofDependenciesBetweenSoftwareUnits(name, other);
+								}
+							}
 						}
 					}
 				}
+			} else if (i != 6)
+				try {
+					numberOfViolations[i] += validateService.getViolationsByRule(currentAppliedRule).length;
+				} catch (Exception e) {
+					System.out.println("Problem countring violations of: " + currentAppliedRule);
+				}
+		}
+		for (String name : patternNames) {
+			for (String otherName : remainderUnits) {
+				numberOfDependencies += getNumberofDependenciesBetweenSoftwareUnits(name, otherName);
+				numberOfDependencies += getNumberofDependenciesBetweenSoftwareUnits(otherName, name);
+			}
+			for (String otherPatternName : patternNames) {
+				if (!name.equals(otherPatternName))
+					numberOfDependencies += getNumberofDependenciesBetweenSoftwareUnits(name, otherPatternName);
 			}
 		}
-		// logger.info("Number of dependencies within pattern: " + totalNumberOfDependencies[0] + ", resulting in a total of "
-		// + IntStream.of(numberOfViolations).sum() + " violations.");
-		results[0] = totalNumberOfDependencies;
-		results[1] = numberOfViolations;
+		results[0] = new int[] { numberOfDependencies };
+		// The total number of relevant dependencies but "Must use".
+		results[1] = numberOfViolations; // The total number of violations of the above dependencies, sorted per rule type.
+		results[2] = new int[] { numberOfMustUseAffirmations }; // The total number of correct dependency instances of the "Must use" rule type.
 		return results;
 	}
+
+	// This calculates the numbers necessary for determining the fitness score in the aggregation case.
+	private int[][] validatePatternCandidateAggregation(Map<Integer, ArrayList<String>> patternUnitNames) {
+		int[][] results = new int[3][];
+		int numberOfDependencies = 0;
+		int[] numberOfViolations = new int[7];
+		int numberOfMustUseAffirmations = 0;
+		int i = 6;
+		boolean contains = false;
+		ArrayList<String> remainderUnits = new ArrayList<String>(internalRootPackagesWithClasses.size());
+		for (SoftwareUnitDTO unit : internalRootPackagesWithClasses) {
+			for (ArrayList<String> value : patternUnitNames.values()) {
+				if (value.contains(unit.uniqueName)) {
+					contains = true;
+					break;
+				}
+			}
+			if (contains == false)
+				remainderUnits.add(unit.uniqueName);
+		}
+		validateService.checkConformance();
+		for (RuleDTO currentAppliedRule : defineService.getDefinedRules()) {
+			i = determineCategoryIndex(currentAppliedRule.ruleTypeKey);
+			if (i == 0) { // If the number of MustUse violations is zero, that's good.
+				if (validateService.getViolationsByRule(currentAppliedRule).length != 0) {
+					logger.info("Candidate was excluded due to violation of MustUse rule(s)");
+					results[0] = null;
+					results[1] = null;
+					results[2] = null;
+					return results;
+				} else {
+					for (int j = 0; j < patternUnitNames.size(); j++) {
+						for (String name : patternUnitNames.get(j)) {
+							if (currentAppliedRule.moduleFrom.logicalPath.equals(defineService.getModule_BasedOnSoftwareUnitName(name).logicalPath)) {
+								for (int k = 0; k < patternUnitNames.size(); k++) {
+									if (j != k) {
+										for (String otherName : patternUnitNames.get(k)) {
+											if (currentAppliedRule.moduleTo.logicalPath.equals(defineService.getModule_BasedOnSoftwareUnitName(otherName).logicalPath)) {
+												numberOfMustUseAffirmations += getNumberofDependenciesBetweenSoftwareUnits(name, otherName);
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			} else if (i != 6) {
+				try {
+					numberOfViolations[i] += validateService.getViolationsByRule(currentAppliedRule).length;
+				} catch (Exception e) {
+					System.out.println("Problem countring violations of: " + currentAppliedRule);
+				}
+			}
+		}
+		for (int j = 0; j < patternUnitNames.size(); j++) {
+			for (String name : patternUnitNames.get(j)) {
+				for (int k = 0; k < patternUnitNames.size(); k++) {
+					if (j != k) {
+						for (String otherPatternName : patternUnitNames.get(k)) {
+							if (!name.equals(otherPatternName))
+								numberOfDependencies += getNumberofDependenciesBetweenSoftwareUnits(name, otherPatternName);
+						}
+					}
+				}
+				for (String otherName : remainderUnits) {
+					numberOfDependencies += getNumberofDependenciesBetweenSoftwareUnits(name, otherName);
+					numberOfDependencies += getNumberofDependenciesBetweenSoftwareUnits(otherName, name);
+				}
+			}
+		}
+		results[0] = new int[] { numberOfDependencies };
+		// The total number of relevant dependencies but "Must use".
+		results[1] = numberOfViolations; // The total number of violations of the above dependencies, sorted per rule type.
+		results[2] = new int[] { numberOfMustUseAffirmations }; // The total number of correct dependency instances of the "Must use" rule type.
+		return results;
+	}
+
+	//
+	// /** A particular pattern candidate is validated while allowing for multiple software units assigned to the same pattern module.
+	// *
+	// * @param patternUnitNames
+	// * @return */
+	// private int[][] validatePatternCandidateAllowingAggregates(Map<Integer, ArrayList<String>> patternUnitNames) {
+	// int[][] results = new int[2][6];
+	// validateService.checkConformance();
+	// int[] numberOfViolations = new int[6];
+	// int i = 6;
+	// for (RuleDTO currentAppliedRule : defineService.getDefinedRules()) {
+	// i = determineCategoryIndex(currentAppliedRule.ruleTypeKey);
+	// if (i == 0) {
+	// if (validateService.getViolationsByRule(currentAppliedRule).length != 0) {
+	// logger.info("Candidate was excluded due to violation of MustUse rule(s)");
+	// results[0] = null;
+	// results[1] = null;
+	// return results;
+	// }
+	// } else if (i != 6)
+	// numberOfViolations[i] += validateService.getViolationsByRule(currentAppliedRule).length;
+	// }
+	// int[] totalNumberOfDependencies = new int[1];
+	// for (int j = 0; j < patternUnitNames.size(); j++) {
+	// for (String name : patternUnitNames.get(j)) {
+	// for (int k = 0; k < patternUnitNames.size(); k++) {
+	// for (String otherName : patternUnitNames.get(k)) {
+	// if (j != k) {
+	// if (name != otherName)
+	// totalNumberOfDependencies[0] += getNumberofDependenciesBetweenSoftwareUnits(name, otherName);
+	// }
+	// }
+	// }
+	// }
+	// }
+	// // logger.info("Number of dependencies within pattern: " + totalNumberOfDependencies[0] + ", resulting in a total of "
+	// // + IntStream.of(numberOfViolations).sum() + " violations.");
+	// results[0] = totalNumberOfDependencies;
+	// results[1] = numberOfViolations;
+	// return results;
+	// }
 
 	/** Determine the rule type of a rule.
 	 * 
@@ -395,15 +543,15 @@ public class ReconstructArchitecture {
 	private int determineCategoryIndex(String currentRuleType) {
 		if (currentRuleType == "MustUse")
 			return 0;
-		else if (currentRuleType == "IsNotAllowedToMakeBackCall")
+		else if (currentRuleType.equalsIgnoreCase("IsNotAllowedToMakeBackCall"))
 			return 1;
-		else if (currentRuleType == "IsNotAllowedToMakeSkipCall")
+		else if (currentRuleType.equalsIgnoreCase("IsNotAllowedToMakeSkipCall"))
 			return 2;
-		else if (currentRuleType == "IsNotAllowedToUse")
+		else if (currentRuleType.equalsIgnoreCase("IsNotAllowedToUse"))
 			return 3;
-		else if (currentRuleType == "IsOnlyAllowedToUse")
+		else if (currentRuleType.equalsIgnoreCase("IsOnlyAllowedToUse"))
 			return 4;
-		else if (currentRuleType == "IsTheOnlyModuleAllowedToUse")
+		else if (currentRuleType.equalsIgnoreCase("IsTheOnlyModuleAllowedToUse"))
 			return 5;
 		else
 			return 6;
@@ -412,14 +560,14 @@ public class ReconstructArchitecture {
 	/** Sorting two candidates based on their fitness scores. This uses a custom Comparator.
 	 * 
 	 * @param candidateScores */
-	private void sortCandidates(float[][] candidateScores) {
-		Arrays.sort(candidateScores, new Comparator<float[]>() {
+	private void sortCandidates(double[][] candidateScores) {
+		Arrays.sort(candidateScores, new Comparator<double[]>() {
 
 			@Override
-			public int compare(float[] o1, float[] o2) {
-				float fitness1 = o1[0];
-				float fitness2 = o2[0];
-				return Float.compare(fitness1, fitness2);
+			public int compare(double[] o1, double[] o2) {
+				double fitness1 = o1[0];
+				double fitness2 = o2[0];
+				return Double.compare(fitness1, fitness2);
 			}
 		});
 	}
@@ -465,9 +613,8 @@ public class ReconstructArchitecture {
 			String newRoot = internalRootPackagesWithClasses.get(0).uniqueName;
 			internalRootPackagesWithClasses = new ArrayList<SoftwareUnitDTO>();
 			for (SoftwareUnitDTO child : queryService.getChildUnitsOfSoftwareUnit(newRoot)) {
-				if (child.type.equalsIgnoreCase("package")) {
+				if (child.type.equalsIgnoreCase("package"))
 					internalRootPackagesWithClasses.add(child);
-				}
 			}
 		}
 	}
@@ -514,7 +661,7 @@ public class ReconstructArchitecture {
 		}
 		if (patternUnitNames.keySet().size() == currentPattern.getNumberOfModules()) {
 			currentPattern.mapPatternAllowingAggregates(patternUnitNames);
-			validatePatternCandidateAllowingAggregates(patternUnitNames);
+			validatePatternCandidateAggregation(patternUnitNames);
 			System.out.println("Best candidate was successfully mapped and validated.");
 		} else
 			System.out.println("Failed to map best candidate");

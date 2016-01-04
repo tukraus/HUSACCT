@@ -23,7 +23,7 @@ public class GeneticFitnessFunction extends FitnessFunction {
 
 	public double evaluate(IChromosome a_subject) {
 		// Take care of the fitness evaluator. It could either be weighting higher fitness values higher (e.g.DefaultFitnessEvaluator). Or it could
-		// weight lower fitness values higher, because the fitness value is seen as a defect rate (e.g. DeltaFitnessEvaluator)
+		// weigh lower fitness values higher, because the fitness value is seen as a defect rate (e.g. DeltaFitnessEvaluator)
 		boolean defaultComparation = a_subject.getConfiguration().getFitnessEvaluator().isFitter(2, 1);
 		if (defaultComparation == false) {
 			return 1.0;
@@ -35,7 +35,7 @@ public class GeneticFitnessFunction extends FitnessFunction {
 		}
 		double fitness = reconstruct.getFitnessScore(pattern, alleles);
 		System.out.println("Fitness score: " + fitness);
-		return Math.max(1.0d, fitness);
+		return Math.max(0.0d, fitness);
 	}
 
 	public static int getMaxBounds() {

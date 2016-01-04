@@ -68,12 +68,21 @@ public class GeneticAlgorithm {
 		}
 		long endTime = System.currentTimeMillis();
 		System.out.println("Total evolution time: " + (endTime - startTime) + " ms");
-		bestSolutions = new ArrayList<Chromosome>(10);
-		bestSolutions.addAll(population.getFittestChromosomes(10));
+		bestSolutions = new ArrayList<Chromosome>(population.getPopulation().size());
+		bestSolutions.addAll(population.getFittestChromosomes(population.getPopulation().size()));
+		for (int i = 0; i < bestSolutions.size(); i++) {
+			for (int j = i + 1; j < bestSolutions.size(); j++) {
+				if (bestSolutions.get(i).equals(bestSolutions.get(j))) {
+					bestSolutions.remove(j);
+					j--;
+				}
+			}
+
+		}
 	}
 
-	public static ArrayList<Chromosome> run(Pattern currentPattern, String[] softwareUnits, boolean monitor, ReconstructArchitecture reconstruct,
-			boolean remainder) throws Exception {
+	public static ArrayList<Chromosome> run(Pattern currentPattern, String[] softwareUnits, boolean monitor, ReconstructArchitecture reconstruct, boolean remainder)
+			throws Exception {
 		if (softwareUnits.length < 2) {
 			System.out.println("Too few software units. ");
 		} else if (softwareUnits.length > GeneticFitnessFunction.getMaxBounds())
@@ -94,8 +103,12 @@ public class GeneticAlgorithm {
 		determineBestCandidates(monitor);
 		System.out.println("Presenting the ordering of software units mapped in the chromosomes: \n");
 		for (int i = 1; i <= softwareUnits.length; i++) {
-			System.out.println(i + ": " + softwareUnits[i-1]);
+			System.out.println(i + ": " + softwareUnits[i - 1]);
 		}
+		System.out.println(
+				"\nThe best (and unique) chromosomes are printed here. If their number is particularly small, it is because the population contained many duplicates.");
+		System.out.println(
+				"This would mean that the algorithm has converged on a small number of solutions. These should indicate at least local optima, if not the global optimum.");
 		System.out.println();
 		return bestSolutions;
 	}
