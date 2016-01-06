@@ -77,8 +77,8 @@ public final class ConfigurationServiceImpl extends Observable {
 
 	public void addViolations(List<Violation> violations) {
 		violationRepository.addViolation(violations);
-		
-		setChanged();
+		// TODO: Replace temporary solution of commenting setChanged() out. ColorChooserEditor creates new dialog objects that do not get dereferenced.
+//		setChanged();
 		notifyObservers();
 		notifyServiceListeners();
 	}

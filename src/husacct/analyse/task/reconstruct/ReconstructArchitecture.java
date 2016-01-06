@@ -13,6 +13,8 @@ import org.apache.log4j.Logger;
 import org.jgap.Chromosome;
 import org.jgap.Gene;
 
+import com.aetrion.flickr.blogs.Service;
+
 import husacct.ServiceProvider;
 import husacct.analyse.IAnalyseService;
 import husacct.analyse.domain.IModelQueryService;
@@ -40,7 +42,8 @@ public class ReconstructArchitecture {
 	private IDefineService defineService;
 	private IValidateService validateService;
 	private ArrayList<SoftwareUnitDTO> internalRootPackagesWithClasses;
-	// The first packages starting from the project root) that contain one or more classes.
+	// The first packages starting from the project root that contain one or more classes.
+	// This is the selection of software units for the pattern search.
 
 	// External system variables
 	private String xLibrariesRootPackage = "xLibraries";
@@ -49,6 +52,9 @@ public class ReconstructArchitecture {
 	private TreeMap<Integer, ArrayList<SoftwareUnitDTO>> layers = new TreeMap<Integer, ArrayList<SoftwareUnitDTO>>();
 	private int layerThreshold = 10; // Percentage of allowed violating dependencies (back-calls) for adding layers.
 	private int skipCallThreshold = 10; // Percentage of allowed violating dependencies (skip-calls) for partially merging layers.
+	int betaSquared = 1;
+	// Beta^2 affects the F-measure-inspired fitness function. betaSqaured = 1 means F1, although it is not actually the harmonic mean of recall
+	// and precision, but of various validation results.
 
 	/** The main method for the ReconstructArchitecture class. Currently requires hard-coded modification instead of arguments.
 	 * 
@@ -63,8 +69,8 @@ public class ReconstructArchitecture {
 		// If source code is not well structured in a package hierarchy, including individual classes in the root might help. This can make n way too
 		// big, though, so be careful if you're taking the brute force approach. This may cause memory issues.
 
-		boolean aggregation = false;
-		boolean remainder = false; // Only relevant if aggregation = true.
+		boolean aggregation = true;
+		boolean remainder = true; // Only relevant if aggregation = true.
 
 		String pattern = "Layered";
 		int numberOfLayers = 3; // Only matters for N-Layered patterns.
@@ -95,8 +101,8 @@ public class ReconstructArchitecture {
 		currentPattern.insertPattern(); // This adds modules and rules (including exceptions if need be) to the intended architecture.
 		logger.info("Number of rules after applying patterns: " + defineService.getDefinedRules().length);
 		if (currentPattern != null) {
-			// bruteForceApproach(currentPattern, remainder, aggregation);
-			geneticApproach(currentPattern, remainder);
+			bruteForceApproach(currentPattern, remainder, aggregation);
+			// geneticApproach(currentPattern, remainder);
 		}
 	}
 
@@ -164,7 +170,7 @@ public class ReconstructArchitecture {
 		while (patternNames != null) {
 			// This is where validation is requested and a top 10 is generated.
 			currentPattern.mapPattern(patternNames);
-			fitness = determineFitnessF1(validatePatternCandidateSimple(patternNames));
+			fitness = determineFitnessHarmonic(validatePatternCandidateSimple(patternNames));
 			lowestTopFitness = keepScore(numberOfTopCandidates, candidateScores, fitness, lowestTopFitness, candidateNumber);
 			patternNames = mapgen.next();
 			candidateNumber++;
@@ -215,34 +221,46 @@ public class ReconstructArchitecture {
 		double lowestTopFitness = 0;
 		ServiceProvider.getInstance().getControlService().setValidate(true);
 		int candidateNumber = 0;
+		List<List<String>> map = new ArrayList<List<String>>();
 		while (true) {
-			List<List<String>> map = mapCal.next();
+			map = mapCal.next();
 			if (map == null)
 				break;
 			for (int i = 0; i < map.size(); i++) {
 				patternMapping.put(i, (ArrayList<String>) map.get(i));
 			}
 			currentPattern.mapPatternAllowingAggregates(patternMapping);
-			fitness = determineFitnessF1(validatePatternCandidateAggregation(patternMapping));
+			fitness = determineFitnessHarmonic(validatePatternCandidateAggregation(patternMapping));
 			lowestTopFitness = keepScore(numberOfTopCandidates, candidateScores, fitness, lowestTopFitness, candidateNumber);
 			candidateNumber++;
 			System.out.println("Candidate number: " + candidateNumber);
 		}
 		sortCandidates(candidateScores);
-		int remainderNumber = candidateNumber;
+
+		ArrayList<ArrayList<ArrayList<String>>> bestMappings = new ArrayList<ArrayList<ArrayList<String>>>();
+		for (int i = 0; i < numberOfTopCandidates; i++) {
+			bestMappings.add(i, new ArrayList<ArrayList<String>>());
+			for (int j = 0; j < currentPattern.getNumberOfModules(); j++)
+				bestMappings.get(i).add(j, mapCal.getMappingMap((int) candidateScores[i][1]).get(j));
+		}
+		mapCal = null;
+		System.gc();
+		// ===================================================================Moving on to include Remainder
+
 		AggregateMappingGenerator mapCalRemainder = null;
+		int remainderNumber = candidateNumber;
 		if (remainder) {
 			System.out.println("HERE STARTS THE REMAINDER LOOP.");
 			mapCalRemainder = new AggregateMappingGenerator(patternUnitNames, currentPattern.getNumberOfModules(), remainder);
 			while (true) {
-				List<List<String>> map = mapCalRemainder.next();
+				map = mapCalRemainder.next();
 				if (map == null)
 					break;
 				for (int i = 0; i < map.size(); i++) {
 					patternMapping.put(i, (ArrayList<String>) map.get(i));
 				}
 				currentPattern.mapPatternAllowingAggregates(patternMapping);
-				fitness = determineFitnessF1(validatePatternCandidateAggregation(patternMapping));
+				fitness = determineFitnessHarmonic(validatePatternCandidateAggregation(patternMapping));
 				lowestTopFitness = keepScore(numberOfTopCandidates, candidateScores, fitness, lowestTopFitness, candidateNumber);
 				candidateNumber++;
 				System.out.println("Candidate number: " + candidateNumber);
@@ -250,25 +268,22 @@ public class ReconstructArchitecture {
 			sortCandidates(candidateScores);
 		}
 		ServiceProvider.getInstance().getControlService().setValidate(false);
-		logger.info("Done \n");
 		logger.info("Best " + numberOfTopCandidates + " candidates: ");
-		Map<Integer, ArrayList<String>> bestmapping = new HashMap<>();
 		for (int i = 0; i < numberOfTopCandidates; i++) {
-			// A fitness score between 0 and 1 is more intuitive for the output, but the genetic algorithm requires 1.0 to be the lowest score.
-			if ((int) candidateScores[i][1] < remainderNumber)
-				bestmapping = mapCal.getMappingMap((int) candidateScores[i][1]);
-			else
-				bestmapping = mapCalRemainder.getMappingMap((int) candidateScores[i][1] - remainderNumber);
-			logger.info("Fitness score: " + (candidateScores[i][0]) + ". Mapped software units unique names: " + bestmapping);
+			if ((int) candidateScores[i][1] >= remainderNumber) {
+				bestMappings.add(i, new ArrayList<ArrayList<String>>());
+				for (int j = 0; j < currentPattern.getNumberOfModules(); j++)
+					bestMappings.get(i).add(j, mapCalRemainder.getMappingMap((int) candidateScores[i][1] - remainderNumber).get(j));
+			}
+			System.out.println("Fitness: " + candidateScores[i][0] + " --> Mapping: " + bestMappings.get(i).toString());
 		}
-		if ((int) candidateScores[numberOfTopCandidates - 1][1] < remainderNumber) {
-			bestmapping = mapCal.getMappingMap((int) candidateScores[numberOfTopCandidates - 1][1]);
-			currentPattern.mapPatternAllowingAggregates(bestmapping);
-		} else {
-			bestmapping = mapCalRemainder.getMappingMap((int) candidateScores[numberOfTopCandidates - 1][1] - remainderNumber);
-			currentPattern.mapPatternAllowingAggregates(bestmapping);
+		HashMap<Integer, ArrayList<String>> bestCandidate = new HashMap<Integer, ArrayList<String>>();
+		for (int i = 0; i < currentPattern.getNumberOfModules(); i++) {
+			bestCandidate.put(i, bestMappings.get(numberOfTopCandidates - 4).get(i));
 		}
+		currentPattern.mapPatternAllowingAggregates(bestCandidate);
 		logger.info("This last mapping was selected for the intended architecture by default.");
+
 	}
 
 	/** Fitness scores are calculated for a chromosome. This allows for aggregation (multiple SUs in one pattern module).
@@ -294,30 +309,35 @@ public class ReconstructArchitecture {
 		}
 		if (patternUnitNames.keySet().size() == pattern.getNumberOfModules()) {
 			pattern.mapPatternAllowingAggregates(patternUnitNames);
-			return determineFitnessF1(validatePatternCandidateAggregation(patternUnitNames)) + 1;
+			return determineFitnessHarmonic(validatePatternCandidateAggregation(patternUnitNames)) + 1;
 		} else
 			return -1;
 	}
 
-	/** Calculate the fitness score for a single candidate, as displayed at the end of a search. This works for all cases (aggregate/remainder,
-	 * genetic/brute force).
-	 * 
-	 * @param validationResults
-	 * @return */
-	private float determineFitness(int[][] validationResults) {
-		if (validationResults[0] == null)
-			return -1; // In case of excluded candidate.
-		int sum = 0;
-		for (int t = 0; t < 6; t++) {
-			sum += validationResults[1][t];
-		}
-		System.out.println("Number of dependencies: " + validationResults[0][0]);
-		System.out.println("Number of violations: " + sum);
-		return (2 - ((sum) / ((float) validationResults[0][0])));
-	}
+	// /** Calculate the fitness score for a single candidate, as displayed at the end of a search. This works for all cases (aggregate/remainder,
+	// * genetic/brute force).
+	// *
+	// * @param validationResults
+	// * @return */
+	// private float determineFitness(int[][] validationResults) {
+	// if (validationResults[0] == null)
+	// return -1; // In case of excluded candidate.
+	// int sum = 0;
+	// for (int t = 0; t < 6; t++) {
+	// sum += validationResults[1][t];
+	// }
+	// System.out.println("Number of dependencies: " + validationResults[0][0]);
+	// System.out.println("Number of violations: " + sum);
+	// return (2 - ((sum) / ((float) validationResults[0][0])));
+	// }
 
-	private double determineFitnessF1(int[][] validationResults) {
-		if (validationResults[0] == null)
+	// This calculates the fitness function, which is defined as follows:
+	// f(N_d, N_d-m, N_d-m,v, N_d,m, beta) = 2 * (1-N_d-m,v/N_d-m)*N_d,m/Nd) /(1-N_d-m,v/N_d-m) + N_d,m/Nd)
+	// This is the harmonic mean of the two ratios, meaning it is a balance between the number of violations over the number of non-essential
+	// dependencies and the number of essential dependencies explained by the pattern.
+	// It is inspired by the F-measure, although that is not what it is since this fitness score is not about true/false negatives/positives.
+	private double determineFitnessHarmonic(int[][] validationResults) {
+		if (validationResults == null)
 			return -1; // In case of excluded candidate.
 		double sum = 0;
 		for (int i = 0; i < validationResults[1].length; i++)
@@ -325,8 +345,16 @@ public class ReconstructArchitecture {
 		double nvScore = 1 - sum / (validationResults[0][0] - validationResults[2][0]); // nvScore is based on the relative number of violations.
 		if (!(nvScore >= 0))
 			nvScore = 1;
-		double nmScore = validationResults[2][0] / validationResults[0][0];
-		return 2 * nvScore * nmScore / (nvScore + nmScore);
+		double nmScore = (double) validationResults[2][0] / validationResults[0][0];
+		try {
+			return (1 + betaSquared) * nvScore * nmScore / (betaSquared * nvScore + nmScore);
+		} catch (Exception e) {
+			if (betaSquared <= 0)
+				System.out.println("Beta^2 is negative: " + betaSquared);
+			else
+				System.out.println("Unknown exception.");
+			return 0.0;
+		}
 	}
 
 	// private int[][] validatePatternCandidate(ArrayList<String> patternNames) {
@@ -377,11 +405,7 @@ public class ReconstructArchitecture {
 			i = determineCategoryIndex(currentAppliedRule.ruleTypeKey);
 			if (i == 0) { // If the number of MustUse violations is zero, that's good.
 				if (validateService.getViolationsByRule(currentAppliedRule).length != 0) {
-					logger.info("Candidate was excluded due to violation of MustUse rule(s)");
-					results[0] = null;
-					results[1] = null;
-					results[2] = null;
-					return results;
+					return null;
 				} else {
 					for (String name : patternNames) {
 						if (currentAppliedRule.moduleFrom.logicalPath.equals(defineService.getModule_BasedOnSoftwareUnitName(name).logicalPath)) {
@@ -441,11 +465,7 @@ public class ReconstructArchitecture {
 			i = determineCategoryIndex(currentAppliedRule.ruleTypeKey);
 			if (i == 0) { // If the number of MustUse violations is zero, that's good.
 				if (validateService.getViolationsByRule(currentAppliedRule).length != 0) {
-					logger.info("Candidate was excluded due to violation of MustUse rule(s)");
-					results[0] = null;
-					results[1] = null;
-					results[2] = null;
-					return results;
+					return null;
 				} else {
 					for (int j = 0; j < patternUnitNames.size(); j++) {
 						for (String name : patternUnitNames.get(j)) {
@@ -467,7 +487,7 @@ public class ReconstructArchitecture {
 				try {
 					numberOfViolations[i] += validateService.getViolationsByRule(currentAppliedRule).length;
 				} catch (Exception e) {
-					System.out.println("Problem countring violations of: " + currentAppliedRule);
+					System.out.println("Problem counting violations of: " + currentAppliedRule);
 				}
 			}
 		}
@@ -489,7 +509,7 @@ public class ReconstructArchitecture {
 		}
 		results[0] = new int[] { numberOfDependencies };
 		// The total number of relevant dependencies but "Must use".
-		results[1] = numberOfViolations; // The total number of violations of the above dependencies, sorted per rule type.
+		results[1] = numberOfViolations.clone(); // The total number of violations of the above dependencies, sorted per rule type.
 		results[2] = new int[] { numberOfMustUseAffirmations }; // The total number of correct dependency instances of the "Must use" rule type.
 		return results;
 	}

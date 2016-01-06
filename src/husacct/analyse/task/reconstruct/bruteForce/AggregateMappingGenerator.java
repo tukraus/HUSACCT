@@ -71,9 +71,8 @@ public class AggregateMappingGenerator {
 		for (List<List<Integer>> singleGrouping : result)
 			deepSort(singleGrouping);
 		for (int i = 0; i < result.size(); i++) {
-			if (!finalResult.contains(result.get(i))) {
+			if (!finalResult.contains(result.get(i)))
 				finalResult.add(currentMappingSize, result.get(i));
-			}
 		}
 	}
 
@@ -151,7 +150,7 @@ public class AggregateMappingGenerator {
 			}
 			return convertBack(finalResult.get(currentMappingSize));
 		}
-		return convertBack(finalResult.get(currentMappingSize - 1)); // Here we can return the next mapping, because
+		return convertBack(finalResult.get(currentMappingSize)); // Here we can return the next mapping, because
 		// we simply had not yet reached the end of the list as it was. I don't use an iterator here due to the problem of adding to a list whilst
 		// iterating over it and keeping track of the index. To be improved? Surely this whole mapper can be sped up.
 	}
@@ -166,7 +165,6 @@ public class AggregateMappingGenerator {
 			}
 			mapping.add(i, temp);
 		}
-
 		if (isThereARemainder)
 			mapping.remove(numberOfGroups - 1);
 		currentMappingSize++;

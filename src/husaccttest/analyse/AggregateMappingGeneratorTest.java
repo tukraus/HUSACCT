@@ -2,10 +2,12 @@ package husaccttest.analyse;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
+import java.util.ArrayList;
 import java.util.List;
 
-import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import husacct.analyse.task.reconstruct.bruteForce.AggregateMappingGenerator;
@@ -14,6 +16,7 @@ public class AggregateMappingGeneratorTest {
 
 	@Test
 	public void nextTest() {
+		List<ArrayList<List<String>>> mappingList = new ArrayList<ArrayList<List<String>>>();
 		String[] names = new String[] { "package1", "package2", "package3", "package4", "package5", "package6" };
 		int numberOfGroups = 3;
 		AggregateMappingGenerator mappingCalculator = new AggregateMappingGenerator(names, numberOfGroups, false);
@@ -28,7 +31,8 @@ public class AggregateMappingGeneratorTest {
 				// System.out.println("Count: " + count);
 				break;
 			} else {
-				// System.out.println(singleMapping);
+				assertTrue("MAPPING LIST CONTAINS DUPLICATES", !mappingList.contains(singleMapping));
+				mappingList.add(deepClone(singleMapping));
 				count++;
 				// System.out.println("Count: " + count);
 			}
@@ -58,5 +62,17 @@ public class AggregateMappingGeneratorTest {
 			}
 		}
 		assertEquals("INCORRECT NUMBER OF MAPPINGS", 1560, count);
+	}
+
+	private ArrayList<List<String>> deepClone(List<List<String>> listOfLists) {
+		ArrayList<List<String>> cloneList = new ArrayList<List<String>>(listOfLists.size());
+		ArrayList<String> clone;
+		for (List<String> nestedList : listOfLists) {
+			clone = new ArrayList<String>(nestedList.size());
+			for (String element : nestedList)
+				clone.add(element);
+			cloneList.add(clone);
+		}
+		return cloneList;
 	}
 }

@@ -2,6 +2,7 @@ package husaccttest.analyse;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -30,14 +31,17 @@ public class MappingGeneratorTest {
 		int countN = 0;
 		assertNotNull(mg.next());
 		countN++;
+		ArrayList<List<String>> mappingList = new ArrayList<List<String>>();
 		while (true) {
 			singleMapping = mg.next();
 			if (singleMapping == null) {
-				System.out.println("NO MORE MAPPINGS LEFT");
-				System.out.println(countN);
+//				System.out.println("NO MORE MAPPINGS LEFT");
+//				System.out.println(countN);
 				break;
 			} else {
-				System.out.println(singleMapping);
+				assertTrue("MAPPING LIST CONTAINS DUPLICATES", !mappingList.contains(singleMapping));
+				mappingList.add(singleMapping);
+//				System.out.println(singleMapping);
 				countN++;
 			}
 		}
@@ -50,4 +54,5 @@ public class MappingGeneratorTest {
 			fact *= i;
 		return fact;
 	}
+
 }

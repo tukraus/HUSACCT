@@ -34,7 +34,7 @@ public class GeneticFitnessFunction extends FitnessFunction {
 			alleles[i] = (int) genes[i].getAllele();
 		}
 		double fitness = reconstruct.getFitnessScore(pattern, alleles);
-		System.out.println("Fitness score: " + fitness);
+//		System.out.println("Fitness score: " + fitness);
 		return Math.max(0.0d, fitness);
 	}
 
