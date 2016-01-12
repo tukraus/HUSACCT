@@ -18,7 +18,7 @@ import husacct.analyse.task.reconstruct.patterns.Pattern;
 
 public class GeneticAlgorithm {
 
-	private static final int MAX_ALLOWED_EVOLUTIONS = 5;
+	private static final int MAX_ALLOWED_EVOLUTIONS = 20;
 	private static int numberOfGenes;
 	private static int numberOfModules;
 	public static EvolutionMonitor m_monitor;

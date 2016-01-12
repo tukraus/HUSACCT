@@ -91,7 +91,7 @@ class ViolationRepository {
 		
         violationsList = filteredViolationsList;
         sortViolationsPerRule(); // Do this afterwards, to prevent duplicate violations.
-        this.logger.info(new Date().toString() + " Before/After filterAndSortAllViolations:  " + beforeNrOfViolations + "/" + violationsList.size());
+//        this.logger.info(new Date().toString() + " Before/After filterAndSortAllViolations:  " + beforeNrOfViolations + "/" + violationsList.size());
 	}
 	
 	// Objectives: 1) create and fill violationsPerRuleTreeMap.

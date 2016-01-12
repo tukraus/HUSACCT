@@ -32,7 +32,7 @@ public class MappingGenerator {
 		}
 	}
 
-	public String[][] getPermutations() {
+	private String[][] getPermutations() {
 		combine(generatePackageNumbers());
 		String[][] permutationsArray = new String[permutations.size()][];
 		for (int i = 0; i < permutationsArray.length; i++) {
@@ -96,4 +96,6 @@ public class MappingGenerator {
 	public ArrayList<String> getMapping(int i) {
 		return (ArrayList<String>) permutations.get(i);
 	}
+
+	
 }

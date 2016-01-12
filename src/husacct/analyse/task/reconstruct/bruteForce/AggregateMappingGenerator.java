@@ -3,58 +3,49 @@ package husacct.analyse.task.reconstruct.bruteForce;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
 // Calculating all possible mappings in the aggregation case is a bit of a pain. The current implementation can undoubtedly be sped up, possibly
 // by the use of sets instead of lists whenever we don't care about ordering. This I reserve for future improvements. The crucial step in slowing down
-// the pattern matching approach is not the mapping generation, anyway. -- Joeri Peters
+// the pattern matching approach is not the mapping generation, anyway. Earlier version of this mapper tended to run into heap space problem due to
+// the large amounts of data being stored. Now, however, it works as follows: the given set of software unit names is converted to integers in a
+// reverse ordering, e.g. (5,4,3,2,1). This list in then split into the number of groups equal to the amount of pattern modules (+1 in case of a
+// Remainder). After that, the mapping is excluded if the integers within a single sublist (a pattern module) are not in order. TODO: rewrite this
+// algorithm so that this step is unnecessary. After that, subsequent permutations of the original list are used to regroup the integers, only
+// accepting ordered results and thus preventing duplicates. The permutation ends when the completely ordered list, (1,2,3,4,5), is found. Because
+// this guarantees that no new mapping will be the same as an earlier one, there is no need to store all mappings in a variable. This circumvents the
+// heap space problem. Perhaps there is a simpler way of doing this, I assume there is, but this will do for now. -- Joeri Peters
 public class AggregateMappingGenerator {
 	List<List<List<Integer>>> result;
-	List<List<List<Integer>>> finalResult;
+	Map<Integer, List<List<Integer>>> finalResult;
 	String[] stringNames;
-	ArrayList<ArrayList<Integer>> permutations;
-	Iterator<ArrayList<Integer>> permutationIterator;
 	int numberOfGroups;
 	int currentMappingSize;
 	boolean isThereARemainder;
+	List<Integer> currentPermutation;
+	Map<Integer, List<List<Integer>>> storedResults;
+	int mappingSizeAtClearing;
 
-	// Constructor
-	public AggregateMappingGenerator(String[] packageNames, int numberOfPatternModules, boolean remainder) {
+	public AggregateMappingGenerator(String[] packageNames, int numberOfPatternModules, boolean remainder, int numberOfTops) {
 		numberOfGroups = numberOfPatternModules;
 		isThereARemainder = remainder;
 		if (remainder)
 			numberOfGroups++; // Call this class once with and once without remainder to get all possible mappings.
-		List<Integer> listSU = convertToIntegers(packageNames);
-		permutations = permute(listSU);
-		permutationIterator = permutations.iterator();
 		stringNames = packageNames;
-		finalResult = new ArrayList<>(calculateExpectedLength(listSU.size(), numberOfGroups));
-		currentMappingSize = 0;
-	}
-
-	private int calculateExpectedLength(int n, int k) {
-		int sum = 0;
-		for (int j = 0; j <= k; j++) {
-			sum += Math.pow(-1, k - j) * Math.pow(j, n) * (factorial(k) / (factorial(j) * factorial(k - j)));
-		}
-		return sum;
-	}
-
-	private int factorial(int i) {
-		if (i <= 1)
-			return 1;
-		return i * factorial(i - 1);
+		currentPermutation = convertToIntegers(stringNames);
+		finalResult = new HashMap<Integer, List<List<Integer>>>();
+		currentMappingSize = -1;
+		mappingSizeAtClearing = 0;
+		storedResults = new HashMap<Integer, List<List<Integer>>>(numberOfTops);
 	}
 
 	// Convert from strings to integers (makes things easier).
-	private List<Integer> convertToIntegers(String[] packageNames) {
-		List<Integer> list = new ArrayList<Integer>(packageNames.length);
-		for (int i = 0; i < packageNames.length; i++)
-			list.add(i, i);
+	private List<Integer> convertToIntegers(String[] names) {
+		List<Integer> list = new ArrayList<Integer>(names.length);
+		for (int i = 0; i < names.length; i++)
+			list.add(i, names.length - i - 1);
 		return list;
 	}
 
@@ -62,18 +53,29 @@ public class AggregateMappingGenerator {
 	// arranged as [1],[2,3,4], as [1,2],[3,4] etc. The ordering within the groups has no effect.
 	private void multipleSplit(List<Integer> individualPermutation, int numberOfGroups) {
 		split(individualPermutation, numberOfGroups);
-		removeDuplicates();
+		preventDuplicates();
 	}
 
 	// The current way of calculating all possible distributions results in many duplicates due to the fact that [1,2],[3,4] is not truly different
-	// from [1,2],[4,3]. This method removes such duplicates.
-	private void removeDuplicates() {
-		for (List<List<Integer>> singleGrouping : result)
-			deepSort(singleGrouping);
-		for (int i = 0; i < result.size(); i++) {
-			if (!finalResult.contains(result.get(i)))
-				finalResult.add(currentMappingSize, result.get(i));
+	// from [1,2],[4,3]. This method prevents such duplicates.
+	private void preventDuplicates() {
+		int index = currentMappingSize;
+		for (List<List<Integer>> singleGrouping : result) {
+			if (groupingIsOrdered(singleGrouping) != false) {
+				finalResult.put(index, singleGrouping);
+				index++;
+			}
 		}
+	}
+
+	private boolean groupingIsOrdered(List<List<Integer>> singleGrouping) {
+		for (int j = 0; j < singleGrouping.size(); j++) {
+			for (int i = 0; i < singleGrouping.get(j).size() - 1; i++) {
+				if (singleGrouping.get(j).get(i) > singleGrouping.get(j).get(i + 1))
+					return false;
+			}
+		}
+		return true;
 	}
 
 	// Splitting a list into groups in all possible ways.
@@ -114,48 +116,32 @@ public class AggregateMappingGenerator {
 		return cloneList;
 	}
 
-	// Sort the nested lists.
-	private void deepSort(List<List<Integer>> temp) {
-		for (List<Integer> group : temp)
-			Collections.sort(group);
-	}
-
-	// Calculate all permutations, i.e. all ways by which to order a list of integers.
-	private ArrayList<ArrayList<Integer>> permute(List<Integer> listSU2) {
-		ArrayList<ArrayList<Integer>> result = new ArrayList<ArrayList<Integer>>();
-		result.add(new ArrayList<Integer>());
-		for (int i = 0; i < listSU2.size(); i++) {
-			ArrayList<ArrayList<Integer>> current = new ArrayList<ArrayList<Integer>>();
-			for (ArrayList<Integer> l : result) {
-				for (int j = 0; j < l.size() + 1; j++) {
-					l.add(j, listSU2.get(i));
-					ArrayList<Integer> temp = new ArrayList<Integer>(l);
-					current.add(temp);
-					l.remove(j);
-				}
+	public List<List<String>> next(int remove) {
+		if (remove != -2) { // The previous call (if there was one), was not in the top N.
+			if (remove == -1) { // The previous call fills up the top N
+				storeResult(true);
+			} else { // The previous call replaces a top candidate.
+				storeResult(true);
+				removeStored(remove);
 			}
-			result = new ArrayList<ArrayList<Integer>>(current);
 		}
-		return result;
-	}
-
-	public List<List<String>> next() {
-		if (finalResult.size() == currentMappingSize) { // If there is no subsequent mapping known, then we want to know if there is at least a
-														// subsequent permutation known. If so, use it to build more mappings.
-			while (finalResult.size() == currentMappingSize) {
-				if (permutationIterator.hasNext()) {
-					multipleSplit(permutationIterator.next(), numberOfGroups);
-				} else
-					return null; // If not, there exist no more mappings and the brute force loop is complete.
-			}
-			return convertBack(finalResult.get(currentMappingSize));
+		if (currentMappingSize == -1) { // The next permutation must not be called the first time.
+			currentMappingSize++;
+			multipleSplit(currentPermutation, numberOfGroups);
 		}
-		return convertBack(finalResult.get(currentMappingSize)); // Here we can return the next mapping, because
-		// we simply had not yet reached the end of the list as it was. I don't use an iterator here due to the problem of adding to a list whilst
-		// iterating over it and keeping track of the index. To be improved? Surely this whole mapper can be sped up.
+		while (currentMappingSize - mappingSizeAtClearing == finalResult.size()) {
+			currentPermutation = nextPermutation(currentPermutation);
+			if (currentPermutation != null) {
+				multipleSplit(currentPermutation, numberOfGroups);
+			} else
+				return null; // If not, there exist no more mappings and the brute force loop is complete.
+		}
+		return convertBack(finalResult.get(currentMappingSize));
 	}
 
 	private List<List<String>> convertBack(List<List<Integer>> next) {
+		if (next == null)
+			System.out.println("wut?");
 		List<List<String>> mapping = new ArrayList<List<String>>(next.size());
 		ArrayList<String> temp;
 		for (int i = 0; i < next.size(); i++) {
@@ -173,7 +159,7 @@ public class AggregateMappingGenerator {
 
 	public Map<Integer, ArrayList<String>> getMappingMap(int i) {
 		Map<Integer, ArrayList<String>> map = new HashMap<>();
-		List<List<String>> bestOne = convertBack(finalResult.get(i));
+		List<List<String>> bestOne = convertBack(storedResults.get(i - 1));
 		for (int j = 0; j < bestOne.size(); j++) {
 			ArrayList<String> temp = new ArrayList<String>();
 			for (int k = 0; k < bestOne.get(j).size(); k++) {
@@ -182,6 +168,47 @@ public class AggregateMappingGenerator {
 			map.put(j, temp);
 		}
 		return map;
+	}
+
+	private List<Integer> nextPermutation(final List<Integer> currentPermutation) {
+		int first = getFirst(currentPermutation);
+		if (first == -1)
+			return null; // no greater permutation
+		int toSwap = currentPermutation.size() - 1;
+		while (currentPermutation.get(first) <= currentPermutation.get(toSwap))
+			--toSwap;
+		swap(currentPermutation, first++, toSwap);
+		toSwap = currentPermutation.size() - 1;
+		while (first < toSwap)
+			swap(currentPermutation, first++, toSwap--);
+		return currentPermutation;
+	}
+
+	private static int getFirst(final List<Integer> currentPermutation) {
+		for (int i = currentPermutation.size() - 2; i >= 0; --i)
+			if (currentPermutation.get(i) > currentPermutation.get(i + 1))
+				return i;
+		return -1;
+	}
+
+	private static void swap(final List<Integer> currentPermutation, final int i, final int j) {
+		final int tmp = currentPermutation.get(i);
+		currentPermutation.set(i, currentPermutation.get(j));
+		currentPermutation.set(j, tmp);
+	}
+
+	private void storeResult(boolean store) {
+		if (store)
+			storedResults.put(currentMappingSize - 1, finalResult.get(currentMappingSize - 1));
+		if (currentMappingSize > 3000 && currentMappingSize == finalResult.size()) {
+			finalResult.clear();
+			mappingSizeAtClearing = currentMappingSize;
+		}
+	}
+
+	private void removeStored(int i) {
+		if (storedResults.containsKey(i - 1))
+			storedResults.remove(i - 1);
 	}
 
 }

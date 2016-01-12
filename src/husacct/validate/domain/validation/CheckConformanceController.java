@@ -40,7 +40,7 @@ public class CheckConformanceController {
 
 	public void checkConformance(RuleDTO[] appliedRules) {
 		try {
-			this.logger.info(new Date().toString() + " Start ConformanceCheck");
+//			this.logger.info(new Date().toString() + " Start ConformanceCheck");
 			ServiceProvider.getInstance().getControlService().updateProgress(0);
 			final ApplicationDTO applicationDetails = defineService.getApplicationDetails();
 			for (ProjectDTO project : applicationDetails.projects) {
@@ -73,7 +73,7 @@ public class CheckConformanceController {
 					}
 					configuration.addViolations(violationList);
 					configuration.filterAndSortAllViolations();
-					this.logger.info(new Date().toString() + " Finished ConformanceCheck");
+//					this.logger.info(new Date().toString() + " Finished ConformanceCheck");
 	
 				} else {
 					logger.error(String.format(" Programming language not found for project: " + project.name));
