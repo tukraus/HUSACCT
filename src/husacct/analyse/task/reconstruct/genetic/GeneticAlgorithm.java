@@ -18,7 +18,7 @@ import husacct.analyse.task.reconstruct.patterns.Pattern;
 
 public class GeneticAlgorithm {
 
-	private static final int MAX_ALLOWED_EVOLUTIONS = 20;
+	private static int MAX_ALLOWED_EVOLUTIONS;
 	private static int numberOfGenes;
 	private static int numberOfModules;
 	public static EvolutionMonitor m_monitor;
@@ -81,8 +81,8 @@ public class GeneticAlgorithm {
 		}
 	}
 
-	public static ArrayList<Chromosome> run(Pattern currentPattern, String[] softwareUnits, boolean monitor, ReconstructArchitecture reconstruct, boolean remainder)
-			throws Exception {
+	public static ArrayList<Chromosome> run(Pattern currentPattern, String[] softwareUnits, boolean monitor, ReconstructArchitecture reconstruct, boolean remainder,
+			int generations) throws Exception {
 		if (softwareUnits.length < 2) {
 			System.out.println("Too few software units. ");
 		} else if (softwareUnits.length > GeneticFitnessFunction.getMaxBounds())
@@ -94,6 +94,7 @@ public class GeneticAlgorithm {
 			numberOfModules = currentPattern.getNumberOfModules();
 			reconstructArchitecture = reconstruct;
 			pattern = currentPattern;
+			MAX_ALLOWED_EVOLUTIONS = generations;
 			if (remainder)
 				allowRemainder = 0;
 			else

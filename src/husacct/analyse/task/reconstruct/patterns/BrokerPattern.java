@@ -17,6 +17,12 @@ public abstract class BrokerPattern extends Pattern {
 	}
 
 	@Override
+	protected void defineMustUseRules() {
+		addSingleRule("Provider", "Broker", "MustUse", null);
+		addSingleRule("Broker", "Requester", "MustUse", null);
+	}
+	
+	@Override
 	protected void defineModules() {
 		defineService.addModule("Broker", "**", "SubSystem", 1, null);
 		defineService.addModule("Provider", "**", "SubSystem", 1, null);

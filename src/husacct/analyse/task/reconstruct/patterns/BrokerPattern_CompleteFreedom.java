@@ -8,8 +8,6 @@ public class BrokerPattern_CompleteFreedom extends BrokerPattern {
 
 	@Override
 	protected void defineRules() {
-		addRule(moduleService.getModuleByLogicalPath("Provider"), moduleService.getModuleByLogicalPath("Broker"), "MustUse");
-		addRule(moduleService.getModuleByLogicalPath("Broker"), moduleService.getModuleByLogicalPath("Requester"), "MustUse");
 		addRule(moduleService.getModuleByLogicalPath("Requester"), moduleService.getModuleByLogicalPath("Provider"), "IsNotAllowedToUse");
 		addRule(moduleService.getModuleByLogicalPath("Provider"), moduleService.getModuleByLogicalPath("Requester"), "IsNotAllowedToUse");
 	}

@@ -20,8 +20,7 @@ public class LayeredPattern_RestrictedRemainder extends LayeredPattern {
 	@Override
 	protected void defineRules() {
 		for (int i = 1; i < numberOfModules; i++) {
-			addRule(moduleService.getModuleByLogicalPath("Layer" + (i + 1)), moduleService.getModuleByLogicalPath("Layer" + i), "MustUse");
-			addRule(moduleService.getModuleByLogicalPath("Layer" + (i + 1)), moduleService.getModuleByLogicalPath("Layer" + i), "IsTheOnlyModuleAllowedToUse");
+			addSingleRule("Layer" + (i + 1), "Layer" + i, "IsTheOnlyModuleAllowedToUse", null);
 		}
 	}
 

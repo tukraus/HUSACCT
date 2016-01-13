@@ -13,9 +13,6 @@ public class LayeredPattern_LayerTypes extends LayeredPattern {
 	@Override
 	protected void defineRules() {
 		// Skip-call and back-call rules get added automatically, so there's no need for them here.
-		for (int i = 2; i <= numberOfModules; i++) {
-			addRule(moduleService.getModuleByLogicalPath("Layer" + i), moduleService.getModuleByLogicalPath("Layer" + (i - 1)), "MustUse");
-		}
 	}
 
 	@Override

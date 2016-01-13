@@ -13,13 +13,11 @@ public class LayeredPattern_CompleteFreedom extends LayeredPattern {
 	@Override
 	protected void defineRules() {
 		for (int i = 1; i <= numberOfModules; i++) {
-			if (i < numberOfModules)
-				addRule(moduleService.getModuleByLogicalPath("Layer" + (i + 1)), moduleService.getModuleByLogicalPath("Layer" + i), "MustUse");
 			for (int j = 1; j <= i; j++) {
 				if (j < i)
-					addRule(moduleService.getModuleByLogicalPath("Layer" + (i - j)), moduleService.getModuleByLogicalPath("Layer" + i), "IsNotAllowedToUse");
+					addSingleRule("Layer" + (i - j), "Layer" + i, "IsNotAllowedToUse", null);
 				if ((i + j + 1) <= numberOfModules)
-					addRule(moduleService.getModuleByLogicalPath("Layer" + (i + j + 1)), moduleService.getModuleByLogicalPath("Layer" + i), "IsNotAllowedToUse");
+					addSingleRule("Layer" + (i + j + 1), "Layer" + i, "IsNotAllowedToUse", null);
 			}
 		}
 	}

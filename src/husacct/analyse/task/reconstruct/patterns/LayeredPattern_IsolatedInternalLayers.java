@@ -13,13 +13,11 @@ public class LayeredPattern_IsolatedInternalLayers extends LayeredPattern {
 	@Override
 	protected void defineRules() {
 		for (int i = 1; i < numberOfModules; i++) {
-			addRule(moduleService.getModuleByLogicalPath("Layer" + i), moduleService.getModuleByLogicalPath("Layer" + numberOfModules), "IsNotAllowedToUse");
+			addSingleRule("Layer" + i, "Layer" + numberOfModules, "IsNotAllowedToUse", null);
 			if (i == 1) {
-				addRule(moduleService.getModuleByLogicalPath("Layer" + 2), moduleService.getModuleByLogicalPath("Layer" + 1), "IsTheOnlyModuleAllowedToUse");
-				addRule(moduleService.getModuleByLogicalPath("Layer" + 2), moduleService.getModuleByLogicalPath("Layer" + 1), "MustUse");
+				addSingleRule("Layer" + 2, "Layer" + 1, "IsTheOnlyModuleAllowedToUse", null);
 			} else {
-				addRule(moduleService.getModuleByLogicalPath("Layer" + (i + 1)), moduleService.getModuleByLogicalPath("Layer" + i), "IsOnlyAllowedToUse");
-				addRule(moduleService.getModuleByLogicalPath("Layer" + (i + 1)), moduleService.getModuleByLogicalPath("Layer" + i), "MustUse");
+				addSingleRule("Layer" + (i + 1), "Layer" + i, "IsOnlyAllowedToUse", null);
 			}
 		}
 

@@ -8,12 +8,9 @@ public class BrokerPattern_RestrictedRemainder extends BrokerPattern {
 
 	@Override
 	protected void defineRules() {
-		addRule(moduleService.getModuleByLogicalPath("Provider"), moduleService.getModuleByLogicalPath("Broker"), "MustUse");
-		addRule(moduleService.getModuleByLogicalPath("Broker"), moduleService.getModuleByLogicalPath("Requester"), "MustUse");
-		addRule(moduleService.getModuleByLogicalPath("Broker"), moduleService.getModuleByLogicalPath("Requester"), "IsTheOnlyModuleAllowedToUse",
-				moduleService.getModuleByLogicalPath("Provider"));// Exception:provider
-		addRule(moduleService.getModuleByLogicalPath("Requester"), moduleService.getModuleByLogicalPath("Broker"), "IsTheOnlyModuleAllowedToUse");
-		addRule(moduleService.getModuleByLogicalPath("Provider"), moduleService.getModuleByLogicalPath("Broker"), "IsTheOnlyModuleAllowedToUse");
+		addSingleRule("Broker", "Requester", "IsTheOnlyModuleAllowedToUse", "Provider");// Exception:provider
+		addSingleRule("Requester", "Broker", "IsTheOnlyModuleAllowedToUse", null);
+		addSingleRule("Provider", "Broker", "IsTheOnlyModuleAllowedToUse", null);
 	}
 
 }

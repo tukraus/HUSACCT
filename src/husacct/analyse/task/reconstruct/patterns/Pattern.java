@@ -34,8 +34,11 @@ public abstract class Pattern {
 	public void insertPattern() {
 		numberOfRules = 0;
 		defineModules();
+		defineMustUseRules();
 		defineRules();
 	}
+
+	protected abstract void defineMustUseRules();
 
 	// Map specific SoftwareUnitDTOs from the analysed application to the defined pattern modules.
 	public abstract void mapPattern(ArrayList<String> patternNames);
@@ -64,5 +67,19 @@ public abstract class Pattern {
 
 	public String getName() {
 		return name;
+	}
+
+	/** Adds a rule to the pattern. Leave exceptionModule null or empty if you don't want an exception.
+	 * 
+	 * @param moduleFrom
+	 * @param moduleTo
+	 * @param ruleType
+	 * @param exceptionModule */
+	protected void addSingleRule(String moduleTo, String moduleFrom, String ruleType, String exceptionModule) {
+		if (exceptionModule == null || exceptionModule.isEmpty())
+			addRule(moduleService.getModuleByLogicalPath(moduleTo), moduleService.getModuleByLogicalPath(moduleFrom), ruleType);
+		else
+			addRule(moduleService.getModuleByLogicalPath(moduleTo), moduleService.getModuleByLogicalPath(moduleFrom), ruleType,
+					moduleService.getModuleByLogicalPath(exceptionModule));
 	}
 }

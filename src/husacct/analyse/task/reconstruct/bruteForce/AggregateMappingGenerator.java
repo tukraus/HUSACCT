@@ -117,14 +117,7 @@ public class AggregateMappingGenerator {
 	}
 
 	public List<List<String>> next(int remove) {
-		if (remove != -2) { // The previous call (if there was one), was not in the top N.
-			if (remove == -1) { // The previous call fills up the top N
-				storeResult(true);
-			} else { // The previous call replaces a top candidate.
-				storeResult(true);
-				removeStored(remove);
-			}
-		}
+
 		if (currentMappingSize == -1) { // The next permutation must not be called the first time.
 			currentMappingSize++;
 			multipleSplit(currentPermutation, numberOfGroups);
@@ -133,15 +126,25 @@ public class AggregateMappingGenerator {
 			currentPermutation = nextPermutation(currentPermutation);
 			if (currentPermutation != null) {
 				multipleSplit(currentPermutation, numberOfGroups);
-			} else
+			} else {
+				if (remove != -2) { // The previous call (if there was one), was not in the top N.
+					storeResult(true);
+				}
 				return null; // If not, there exist no more mappings and the brute force loop is complete.
+			}
+		}
+		if (remove != -2) { // The previous call (if there was one), was not in the top N.
+			if (remove == -1) { // The previous call fills up the top N
+				storeResult(true);
+			} else { // The previous call replaces a top candidate.
+				storeResult(true);
+				removeStored(remove);
+			}
 		}
 		return convertBack(finalResult.get(currentMappingSize));
 	}
 
 	private List<List<String>> convertBack(List<List<Integer>> next) {
-		if (next == null)
-			System.out.println("wut?");
 		List<List<String>> mapping = new ArrayList<List<String>>(next.size());
 		ArrayList<String> temp;
 		for (int i = 0; i < next.size(); i++) {
@@ -207,8 +210,10 @@ public class AggregateMappingGenerator {
 	}
 
 	private void removeStored(int i) {
-		if (storedResults.containsKey(i - 1))
-			storedResults.remove(i - 1);
+		if (storedResults.containsKey(i))
+			storedResults.remove(i);
+		else
+			System.out.println("ERROR!");
 	}
 
 }

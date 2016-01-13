@@ -13,9 +13,16 @@ public abstract class LayeredPattern extends Pattern {
 		numberOfModules = numberOfLayers;
 		name = "Layered";
 	}
+
 	public LayeredPattern() {
 		numberOfModules = 3;
 		name = "Layered";
+	}
+
+	@Override
+	protected void defineMustUseRules() {
+		for (int i = 1; i < numberOfModules; i++)
+			addSingleRule("Layer" + (i + 1), "Layer" + i, "MustUse", null);
 	}
 
 	@Override
@@ -23,7 +30,7 @@ public abstract class LayeredPattern extends Pattern {
 		IAnalyseService analyseService = ServiceProvider.getInstance().getAnalyseService();
 		ArrayList<SoftwareUnitDTO> temp = new ArrayList<>(1);
 		for (int i = 1; i <= mapping.size(); i++) {
-			temp.add(analyseService.getSoftwareUnitByUniqueName(mapping.get(i-1)));
+			temp.add(analyseService.getSoftwareUnitByUniqueName(mapping.get(i - 1)));
 			defineService.editModule("Layer" + i, "Layer" + i, i, temp);
 			temp.clear();
 		}
