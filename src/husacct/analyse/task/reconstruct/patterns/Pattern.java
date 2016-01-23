@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Map;
 
 import husacct.ServiceProvider;
+import husacct.analyse.IAnalyseService;
 import husacct.common.dto.ModuleDTO;
 import husacct.common.dto.RuleDTO;
 import husacct.common.dto.SoftwareUnitDTO;
@@ -23,6 +24,7 @@ public abstract class Pattern {
 	protected int numberOfModules;
 	protected int numberOfRules;
 	protected String name;
+	IAnalyseService analyseService = ServiceProvider.getInstance().getAnalyseService();
 
 	// Add modules to the intended architecture in line with an architectural pattern.
 	protected abstract void defineModules();

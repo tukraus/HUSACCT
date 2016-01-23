@@ -22,6 +22,7 @@ public class LayeredPattern_RestrictedRemainder extends LayeredPattern {
 		for (int i = 1; i < numberOfModules; i++) {
 			addSingleRule("Layer" + (i + 1), "Layer" + i, "IsTheOnlyModuleAllowedToUse", null);
 		}
+		addSingleRule("Layer" + 1, "Layer" + numberOfModules, "IsNotAllowedToUse", null);
 	}
 
 }

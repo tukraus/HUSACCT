@@ -18,7 +18,7 @@ import husacct.analyse.domain.IModelQueryService;
 import husacct.analyse.task.reconstruct.bruteForce.AggregateMappingGenerator;
 import husacct.analyse.task.reconstruct.bruteForce.MappingGenerator;
 import husacct.analyse.task.reconstruct.genetic.GeneticAlgorithm;
-import husacct.analyse.task.reconstruct.patterns.LayeredPattern_RestrictedRemainder;
+import husacct.analyse.task.reconstruct.patterns.MVCPattern_ControllerInterface;
 import husacct.analyse.task.reconstruct.patterns.Pattern;
 import husacct.common.dto.RuleDTO;
 import husacct.common.dto.SoftwareUnitDTO;
@@ -54,54 +54,50 @@ public class ReconstructArchitecture {
 	/** The main method for the ReconstructArchitecture class. Currently requires hard-coded modification instead of arguments.
 	 * 
 	 * @param queryService */
+	@SuppressWarnings("unused")
 	public ReconstructArchitecture(IModelQueryService queryService) {
 		long start = System.currentTimeMillis();
 		this.queryService = queryService;
 		defineService = ServiceProvider.getInstance().getDefineService();
 		validateService = ServiceProvider.getInstance().getValidateService();
 		identifyExternalSystems();
-//		 determineInternalRootPackagesWithClasses();
-		determineInternalRootPackagesWithClassesIncludingClasses();
+		determineInternalRootPackagesWithClasses();
+		// determineInternalRootPackagesWithClassesIncludingClasses();
 		// If source code is not well structured in a package hierarchy, including individual classes in the root might help. This can make n way too
 		// big, though, so be careful if you're taking the brute force approach. This may cause memory issues.
 
+		int numberOfTopCandidates = 30; // Only relevant for the brute force approach.
 		boolean aggregation = true;
-		boolean remainder = true; // Not relevant if aggregation = false.
+		boolean remainder = true; // Not relevant for brute force if aggregation = false.
 		int generations = 20; // Only relevant for the genetic approach.
-		int numberOfTopCandidates = 20; // Only relevant for the brute force approach.
-		String pattern = "Layered";
+
 		int numberOfLayers = 3; // Only matters for N-Layered patterns.
 
 		logger.info("Number of rules before applying patterns: " + defineService.getDefinedRules().length);
 		Pattern currentPattern = null;
-		switch (pattern) {
-			case "Layered":
-//				currentPattern = new LayeredPattern_CompleteFreedom(numberOfLayers);
-				// currentPattern = new LayeredPattern_FreeRemainder(numberOfLayers);
-				// currentPattern = new LayeredPattern_IsolatedInternalLayers(numberOfLayers);
-				// currentPattern = new LayeredPattern_LayerTypes(numberOfLayers);
-				 currentPattern = new LayeredPattern_RestrictedRemainder(numberOfLayers);
-				break;
-			case "MVC":
-				// currentPattern = new MVCPattern_CompleteFreedom();
-				// currentPattern = new MVCPattern_ControllerInterface();
-				// currentPattern = new MVCPattern_FreeRemainder();
-				// currentPattern = new MVCPattern_RestrictedRemainder();
-				break;
-			case "Broker":
-				// currentPattern = new BrokerPattern_CompleteFreedom();
-				// currentPattern = new BrokerPattern_FreeRemainder();
-				// currentPattern = new BrokerPattern_RequesterInterface();
-				// currentPattern = new BrokerPattern_RestrictedRemainder();
-				break;
-		}
+		// currentPattern = new LayeredPattern_CompleteFreedom(numberOfLayers);
+		// currentPattern = new LayeredPattern_FreeRemainder(numberOfLayers);
+		// currentPattern = new LayeredPattern_IsolatedInternalLayers(numberOfLayers);
+		// currentPattern = new LayeredPattern_LayerTypes(numberOfLayers);
+		// currentPattern = new LayeredPattern_RestrictedRemainder(numberOfLayers);
+		// currentPattern = new MVCPattern_CompleteFreedom();
+		// currentPattern = new MVCPattern_ModelInterface();
+		currentPattern = new MVCPattern_ControllerInterface();
+		// currentPattern = new MVCPattern_FreeRemainder();
+		// currentPattern = new MVCPattern_RestrictedRemainder();
+		// currentPattern = new BrokerPattern_CompleteFreedom();
+		// currentPattern = new BrokerPattern_FreeRemainder();
+		// currentPattern = new BrokerPattern_RequesterInterface();
+		// currentPattern = new BrokerPattern_RestrictedRemainder();
+
 		currentPattern.insertPattern(); // This adds modules and rules (including exceptions if need be) to the intended architecture.
 		logger.info("Number of rules after applying patterns: " + defineService.getDefinedRules().length);
 		if (currentPattern != null) {
-			// bruteForceApproach(currentPattern, remainder, aggregation, numberOfTopCandidates);
-			geneticApproach(currentPattern, remainder, generations);
+			bruteForceApproach(currentPattern, remainder, aggregation, numberOfTopCandidates);
+			// geneticApproach(currentPattern, remainder, generations);
 		}
 		System.out.println("Elapsed time: " + ((System.currentTimeMillis() - start) / 1000.0) + " seconds.");
+
 	}
 
 	/** SAR approach using a genetic algorithm to find architectural pattern candidates.
@@ -167,7 +163,7 @@ public class ReconstructArchitecture {
 		patternNames = mapgen.next();
 		int candidateNumber = 0;
 		while (patternNames != null) {
-			// This is where validation is requested and a top 10 is generated.
+			// This is where validation is requested and a top N is generated.
 			currentPattern.mapPattern(patternNames);
 			fitness = determineFitnessHarmonic(validatePatternCandidateSimple(patternNames));
 			lowestTopFitness = keepScore(numberOfTopCandidates, candidateScores, fitness, lowestTopFitness, candidateNumber)[0];
@@ -290,6 +286,8 @@ public class ReconstructArchitecture {
 		ArrayList<ArrayList<ArrayList<String>>> newBestMappings = new ArrayList<ArrayList<ArrayList<String>>>(numberOfTopCandidates);
 		for (int i = 0; i < numberOfTopCandidates; i++) {
 			newBestMappings.add(i, new ArrayList<ArrayList<String>>());
+			if (i == 0 && remainder == false)
+				continue;
 			if (candidateScores[i][0] > 0) {
 				if ((int) candidateScores[i][1] >= remainderNumber) {
 					for (int j = 0; j < currentPattern.getNumberOfModules(); j++)
@@ -298,15 +296,20 @@ public class ReconstructArchitecture {
 					for (int j = 0; j < currentPattern.getNumberOfModules(); j++)
 						newBestMappings.get(i).add(j, mapCal.getMappingMap((int) candidateScores[i][1] + 1).get(j));
 				}
-				System.out.println("Fitness: " + candidateScores[i][0] + " --> Mapping: " + newBestMappings.get(i).toString());
+				if (i > 0)
+					System.out.println("Fitness: " + candidateScores[i][0] + " --> Mapping: " + newBestMappings.get(i).toString());
 			}
 		}
-		HashMap<Integer, ArrayList<String>> bestCandidate = new HashMap<Integer, ArrayList<String>>();
-		for (int i = 0; i < currentPattern.getNumberOfModules(); i++) {
-			bestCandidate.put(i, newBestMappings.get(numberOfTopCandidates - 1).get(i));
+		if (newBestMappings.get(numberOfTopCandidates - 1).isEmpty()) {
+			logger.info("No suitable candidate with non-zero fitness scores were found");
+		} else {
+			HashMap<Integer, ArrayList<String>> bestCandidate = new HashMap<Integer, ArrayList<String>>();
+			for (int i = 0; i < currentPattern.getNumberOfModules(); i++) {
+				bestCandidate.put(i, newBestMappings.get(numberOfTopCandidates - 1).get(i));
+			}
+			currentPattern.mapPatternAllowingAggregates(bestCandidate);
+			logger.info("This last mapping was selected for the intended architecture by default.");
 		}
-		currentPattern.mapPatternAllowingAggregates(bestCandidate);
-		logger.info("This last mapping was selected for the intended architecture by default.");
 	}
 
 	/** Fitness scores are calculated for a chromosome. This allows for aggregation (multiple SUs in one pattern module).
@@ -594,7 +597,6 @@ public class ReconstructArchitecture {
 
 	/** Determine which packages form the root of the source code hierarchy, excluding single classes. If there is just a single package in that root,
 	 * this package becomes the root and packages are identified within it. */
-	@SuppressWarnings("unused")
 	private void determineInternalRootPackagesWithClasses() {
 		internalRootPackagesWithClasses = new ArrayList<SoftwareUnitDTO>();
 		SoftwareUnitDTO[] allRootUnits = queryService.getSoftwareUnitsInRoot(); // Get all root units
@@ -665,28 +667,30 @@ public class ReconstructArchitecture {
 			System.out.println("Failed to map best candidate");
 	}
 
-	private void identifyComponents() {
+	// private void identifyComponents() {
+	//
+	// }
+	//
+	// private void identifySubSystems() {
+	//
+	// }
+	//
+	// private void IdentifyAdapters() { // Here, and adapter is a module with a IsTheOnlyModuleAllowedToUse rule.
+	//
+	// }
+	//
+	// private void createModule() {
+	//
+	// }
 
-	}
-
-	private void identifySubSystems() {
-
-	}
-
-	private void IdentifyAdapters() { // Here, and adapter is a module with a IsTheOnlyModuleAllowedToUse rule.
-
-	}
-
-	private void createModule() {
-
-	}
-
+	@SuppressWarnings("unused")
 	private void createRule(ModuleStrategy moduleTo, ModuleStrategy moduleFrom, String ruleType) {
 		DomainToDtoParser domainParser = new DomainToDtoParser();
 		defineService.addRule(new RuleDTO(ruleType, true, domainParser.parseModule(moduleTo), domainParser.parseModule(moduleFrom), new String[0], "", null, false));
 	}
 
 	/** Automatic layering algorithm, to be improved. */
+	@SuppressWarnings("unused")
 	private void identifyLayers() {
 		// 1) Assign all internalRootPackages to bottom layer
 		int layerId = 1;
@@ -765,6 +769,7 @@ public class ReconstructArchitecture {
 		}
 	}
 
+	@SuppressWarnings("unused")
 	private void mergeLayersPartiallyBasedOnSkipCallAvoidance() {
 		for (int currentLayerID = layers.size(); currentLayerID > 2; currentLayerID--) {
 			ArrayList<SoftwareUnitDTO> unitsInCurrentLayer = layers.get(currentLayerID);

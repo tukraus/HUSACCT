@@ -21,6 +21,7 @@ public class LayeredPattern_FreeRemainder extends LayeredPattern {
 	protected void defineRules() {
 		for (int i = 1; i < numberOfModules; i++) {
 			addSingleRule("Layer" + (i + 1), "Layer" + i, "IsOnlyAllowedToUse", null);
+			addSingleRule("Layer" + i, "Layer" + numberOfModules, "IsNotAllowedToUse", null);
 		}
 	}
 

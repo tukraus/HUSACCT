@@ -3,12 +3,10 @@ package husacct.analyse.task.reconstruct.patterns;
 import java.util.ArrayList;
 import java.util.Map;
 
-import husacct.ServiceProvider;
-import husacct.analyse.IAnalyseService;
 import husacct.common.dto.SoftwareUnitDTO;
 
 public abstract class LayeredPattern extends Pattern {
-	// The abstract class for all N-Layered patterns. Constructor and mapping methods can be defined here.
+	// The abstract class for all N-Layered patterns. Constructor and mapping methods can be defined here, as well as "MustUse" rules.
 	public LayeredPattern(int numberOfLayers) {
 		numberOfModules = numberOfLayers;
 		name = "Layered";
@@ -27,7 +25,6 @@ public abstract class LayeredPattern extends Pattern {
 
 	@Override
 	public void mapPattern(ArrayList<String> mapping) {
-		IAnalyseService analyseService = ServiceProvider.getInstance().getAnalyseService();
 		ArrayList<SoftwareUnitDTO> temp = new ArrayList<>(1);
 		for (int i = 1; i <= mapping.size(); i++) {
 			temp.add(analyseService.getSoftwareUnitByUniqueName(mapping.get(i - 1)));
@@ -38,7 +35,6 @@ public abstract class LayeredPattern extends Pattern {
 
 	@Override
 	public void mapPatternAllowingAggregates(Map<Integer, ArrayList<String>> patternUnitNames) {
-		IAnalyseService analyseService = ServiceProvider.getInstance().getAnalyseService();
 		ArrayList<SoftwareUnitDTO> temp = new ArrayList<>();
 		for (int i = 0; i < patternUnitNames.size(); i++) {
 			for (int j = 0; j < patternUnitNames.get(i).size(); j++) {
