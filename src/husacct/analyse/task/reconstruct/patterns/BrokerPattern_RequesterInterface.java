@@ -8,9 +8,9 @@ public class BrokerPattern_RequesterInterface extends BrokerPattern {
 
 	@Override
 	protected void defineRules() {
-		addRule(moduleService.getModuleByLogicalPath("Broker"), moduleService.getModuleByLogicalPath("Requester"), "IsTheOnlyModuleAllowedToUse",
-				moduleService.getModuleByLogicalPath("Provider")); // Overloaded addRule() method takes exception argument as well.
-		addRule(moduleService.getModuleByLogicalPath("Requester"), moduleService.getModuleByLogicalPath("Broker"), "IsOnlyAllowedToUse",
-				moduleService.getModuleByLogicalPath("Provider"));
+		addSingleRule("Requester", "Broker", "IsOnlyAllowedToUse", "Provider");
+		addSingleRule("Provider", "Broker", "IsTheOnlyModuleAllowedToUse", null);
+		addSingleRule("Broker", "Provider", "IsOnlyAllowedToUse", null);
+		addSingleRule("Broker", "Requester", "IsTheOnlyModuleAllowedToUse", "Provider");
 	}
 }

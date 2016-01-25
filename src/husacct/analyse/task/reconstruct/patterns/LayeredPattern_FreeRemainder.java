@@ -10,12 +10,6 @@ public class LayeredPattern_FreeRemainder extends LayeredPattern {
 		super();
 	}
 
-	@Override
-	protected void defineModules() {
-		for (int i = 1; i <= numberOfModules; i++) {
-			defineService.addModule("Layer" + i, "**", "Subsystem", i, null);
-		}
-	}
 
 	@Override
 	protected void defineRules() {

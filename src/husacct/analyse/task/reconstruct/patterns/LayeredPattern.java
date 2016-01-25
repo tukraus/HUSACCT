@@ -18,6 +18,13 @@ public abstract class LayeredPattern extends Pattern {
 	}
 
 	@Override
+	protected void defineModules() {
+		for (int i = 1; i <= numberOfModules; i++) {
+			defineService.addModule("Layer" + i, "**", "Subsystem", i, null);
+		}
+	}
+	
+	@Override
 	protected void defineMustUseRules() {
 		for (int i = 1; i < numberOfModules; i++)
 			addSingleRule("Layer" + (i + 1), "Layer" + i, "MustUse", null);

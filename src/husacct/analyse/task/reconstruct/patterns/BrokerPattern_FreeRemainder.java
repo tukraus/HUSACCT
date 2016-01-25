@@ -9,10 +9,10 @@ public class BrokerPattern_FreeRemainder extends BrokerPattern {
 
 	@Override
 	protected void defineRules() {
-		addRule(moduleService.getModuleByLogicalPath("Requester"), moduleService.getModuleByLogicalPath("Broker"), "IsOnlyAllowedToUse",
-				moduleService.getModuleByLogicalPath("Provider"));
-		addRule(moduleService.getModuleByLogicalPath("Broker"), moduleService.getModuleByLogicalPath("Requester"), "IsOnlyAllowedToUse");
-		addRule(moduleService.getModuleByLogicalPath("Broker"), moduleService.getModuleByLogicalPath("Provider"), "IsOnlyAllowedToUse");
+		addSingleRule("Broker", "Requester", "IsOnlyAllowedToUse", null);
+		addSingleRule("Requester", "Broker", "IsOnlyAllowedToUse", "Provider");
+		addSingleRule("Provider", "Broker", "IsOnlyAllowedToUse", "Requester");
+		addSingleRule("Broker", "Provider", "IsOnlyAllowedToUse", null);
 	}
 
 }

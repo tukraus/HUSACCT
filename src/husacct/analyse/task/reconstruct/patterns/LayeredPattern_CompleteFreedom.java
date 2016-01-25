@@ -22,11 +22,5 @@ public class LayeredPattern_CompleteFreedom extends LayeredPattern {
 		}
 	}
 
-	@Override
-	protected void defineModules() {
-		for (int i = 1; i <= numberOfModules; i++) {
-			defineService.addModule("Layer" + i, "**", "Subsystem", i, null);
-		}
-	}
 
 }

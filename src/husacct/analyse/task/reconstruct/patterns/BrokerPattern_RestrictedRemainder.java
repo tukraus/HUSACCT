@@ -8,9 +8,10 @@ public class BrokerPattern_RestrictedRemainder extends BrokerPattern {
 
 	@Override
 	protected void defineRules() {
-		addSingleRule("Broker", "Requester", "IsTheOnlyModuleAllowedToUse", "Provider");// Exception:provider
+		addSingleRule("Broker", "Requester", "IsTheOnlyModuleAllowedToUse", "Provider");
 		addSingleRule("Requester", "Broker", "IsTheOnlyModuleAllowedToUse", null);
 		addSingleRule("Provider", "Broker", "IsTheOnlyModuleAllowedToUse", null);
+		addSingleRule("Broker", "Provider", "IsTheOnlyModuleAllowedToUse", "Requester");
 	}
 
 }

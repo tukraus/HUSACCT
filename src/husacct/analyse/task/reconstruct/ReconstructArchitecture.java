@@ -18,7 +18,22 @@ import husacct.analyse.domain.IModelQueryService;
 import husacct.analyse.task.reconstruct.bruteForce.AggregateMappingGenerator;
 import husacct.analyse.task.reconstruct.bruteForce.MappingGenerator;
 import husacct.analyse.task.reconstruct.genetic.GeneticAlgorithm;
+import husacct.analyse.task.reconstruct.patterns.BrokerPattern_CompleteFreedom;
+import husacct.analyse.task.reconstruct.patterns.BrokerPattern_FreeRemainder;
+import husacct.analyse.task.reconstruct.patterns.BrokerPattern_RequesterInterface;
+import husacct.analyse.task.reconstruct.patterns.BrokerPattern_RestrictedRemainder;
+import husacct.analyse.task.reconstruct.patterns.CentralisedLayering;
+import husacct.analyse.task.reconstruct.patterns.LayeredPattern_CompleteFreedom;
+import husacct.analyse.task.reconstruct.patterns.LayeredPattern_FreeRemainder;
+import husacct.analyse.task.reconstruct.patterns.LayeredPattern_IsolatedInternalLayers;
+import husacct.analyse.task.reconstruct.patterns.LayeredPattern_LayerTypes;
+import husacct.analyse.task.reconstruct.patterns.LayeredPattern_RestrictedRemainder;
+import husacct.analyse.task.reconstruct.patterns.MVCPattern_CompleteFreedom;
 import husacct.analyse.task.reconstruct.patterns.MVCPattern_ControllerInterface;
+import husacct.analyse.task.reconstruct.patterns.MVCPattern_FreeRemainder;
+import husacct.analyse.task.reconstruct.patterns.MVCPattern_ModelInterface;
+import husacct.analyse.task.reconstruct.patterns.MVCPattern_RestrictedRemainder;
+import husacct.analyse.task.reconstruct.patterns.Model_Viewcontroller;
 import husacct.analyse.task.reconstruct.patterns.Pattern;
 import husacct.common.dto.RuleDTO;
 import husacct.common.dto.SoftwareUnitDTO;
@@ -67,22 +82,24 @@ public class ReconstructArchitecture {
 		// big, though, so be careful if you're taking the brute force approach. This may cause memory issues.
 
 		int numberOfTopCandidates = 30; // Only relevant for the brute force approach.
-		boolean aggregation = true;
+		boolean aggregation = false;
 		boolean remainder = true; // Not relevant for brute force if aggregation = false.
-		int generations = 20; // Only relevant for the genetic approach.
+		int generations = 30; // Only relevant for the genetic approach.
 
 		int numberOfLayers = 3; // Only matters for N-Layered patterns.
 
 		logger.info("Number of rules before applying patterns: " + defineService.getDefinedRules().length);
 		Pattern currentPattern = null;
-		// currentPattern = new LayeredPattern_CompleteFreedom(numberOfLayers);
+		currentPattern = new LayeredPattern_CompleteFreedom(numberOfLayers);
 		// currentPattern = new LayeredPattern_FreeRemainder(numberOfLayers);
 		// currentPattern = new LayeredPattern_IsolatedInternalLayers(numberOfLayers);
 		// currentPattern = new LayeredPattern_LayerTypes(numberOfLayers);
 		// currentPattern = new LayeredPattern_RestrictedRemainder(numberOfLayers);
+		// currentPattern = new CentralisedLayering();
+		// currentPattern = new Model_Viewcontroller();
 		// currentPattern = new MVCPattern_CompleteFreedom();
 		// currentPattern = new MVCPattern_ModelInterface();
-		currentPattern = new MVCPattern_ControllerInterface();
+		// currentPattern = new MVCPattern_ControllerInterface();
 		// currentPattern = new MVCPattern_FreeRemainder();
 		// currentPattern = new MVCPattern_RestrictedRemainder();
 		// currentPattern = new BrokerPattern_CompleteFreedom();
