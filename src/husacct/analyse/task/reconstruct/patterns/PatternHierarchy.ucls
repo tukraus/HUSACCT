@@ -144,17 +144,7 @@
       <operations public="true" package="true" protected="true" private="true" static="true"/>    
     </display>  
   </class>  
-  <class id="15" language="java" name="husacct.analyse.task.reconstruct.patterns.CentralisedLayering" project="HUSACCT" 
-    file="/HUSACCT/src/husacct/analyse/task/reconstruct/patterns/CentralisedLayering.java" binary="false" 
-    corner="BOTTOM_RIGHT">    
-    <position height="-1" width="-1" x="2250" y="316"/>    
-    <display autosize="true" stereotype="true" package="true" initial-value="true" signature="true" 
-      sort-features="false" accessors="true" visibility="true">      
-      <attributes public="true" package="true" protected="true" private="true" static="true"/>      
-      <operations public="true" package="true" protected="true" private="true" static="true"/>    
-    </display>  
-  </class>  
-  <class id="16" language="java" name="husacct.analyse.task.reconstruct.patterns.MVCPattern_ModelInterface" 
+  <class id="15" language="java" name="husacct.analyse.task.reconstruct.patterns.MVCPattern_ModelInterface" 
     project="HUSACCT" file="/HUSACCT/src/husacct/analyse/task/reconstruct/patterns/MVCPattern_ModelInterface.java" 
     binary="false" corner="BOTTOM_RIGHT">    
     <position height="-1" width="-1" x="1034" y="277"/>    
@@ -164,7 +154,7 @@
       <operations public="true" package="true" protected="true" private="true" static="true"/>    
     </display>  
   </class>  
-  <class id="17" language="java" name="husacct.analyse.task.reconstruct.patterns.Pattern" project="HUSACCT" 
+  <class id="16" language="java" name="husacct.analyse.task.reconstruct.patterns.Pattern" project="HUSACCT" 
     file="/HUSACCT/src/husacct/analyse/task/reconstruct/patterns/Pattern.java" binary="false" corner="BOTTOM_RIGHT">    
     <position height="-1" width="-1" x="1270" y="-66"/>    
     <display autosize="true" stereotype="true" package="true" initial-value="true" signature="true" 
@@ -173,17 +163,7 @@
       <operations public="true" package="true" protected="true" private="true" static="true"/>    
     </display>  
   </class>  
-  <class id="18" language="java" name="husacct.analyse.task.reconstruct.patterns.Model_Viewcontroller" project="HUSACCT" 
-    file="/HUSACCT/src/husacct/analyse/task/reconstruct/patterns/Model_Viewcontroller.java" binary="false" 
-    corner="BOTTOM_RIGHT">    
-    <position height="-1" width="-1" x="722" y="24"/>    
-    <display autosize="true" stereotype="true" package="true" initial-value="true" signature="true" 
-      sort-features="false" accessors="true" visibility="true">      
-      <attributes public="true" package="true" protected="true" private="true" static="true"/>      
-      <operations public="true" package="true" protected="true" private="true" static="true"/>    
-    </display>  
-  </class>  
-  <class id="19" language="java" name="husacct.analyse.task.reconstruct.patterns.MVCPattern_ControllerInterface" 
+  <class id="17" language="java" name="husacct.analyse.task.reconstruct.patterns.MVCPattern_ControllerInterface" 
     project="HUSACCT" file="/HUSACCT/src/husacct/analyse/task/reconstruct/patterns/MVCPattern_ControllerInterface.java" 
     binary="false" corner="BOTTOM_RIGHT">    
     <position height="-1" width="-1" x="1088" y="413"/>    
@@ -193,7 +173,7 @@
       <operations public="true" package="true" protected="true" private="true" static="true"/>    
     </display>  
   </class>  
-  <class id="20" language="java" name="husacct.analyse.task.reconstruct.patterns.LayeredPattern_FreeRemainder" 
+  <class id="18" language="java" name="husacct.analyse.task.reconstruct.patterns.LayeredPattern_FreeRemainder" 
     project="HUSACCT" file="/HUSACCT/src/husacct/analyse/task/reconstruct/patterns/LayeredPattern_FreeRemainder.java" 
     binary="false" corner="BOTTOM_RIGHT">    
     <position height="-1" width="-1" x="1668" y="-6"/>    
@@ -203,80 +183,72 @@
       <operations public="true" package="true" protected="true" private="true" static="true"/>    
     </display>  
   </class>  
-  <generalization id="21">    
-    <end type="SOURCE" refId="1"/>    
-    <end type="TARGET" refId="17"/>  
-  </generalization>  
-  <generalization id="22">    
-    <end type="SOURCE" refId="15"/>    
-    <end type="TARGET" refId="5"/>  
-  </generalization>  
-  <generalization id="23">    
-    <end type="SOURCE" refId="5"/>    
-    <end type="TARGET" refId="1"/>  
-  </generalization>  
-  <generalization id="24">    
-    <end type="SOURCE" refId="7"/>    
-    <end type="TARGET" refId="1"/>  
-  </generalization>  
-  <generalization id="25">    
-    <end type="SOURCE" refId="14"/>    
-    <end type="TARGET" refId="13"/>  
-  </generalization>  
-  <generalization id="26">    
-    <end type="SOURCE" refId="6"/>    
-    <end type="TARGET" refId="1"/>  
-  </generalization>  
-  <generalization id="27">    
-    <end type="SOURCE" refId="18"/>    
-    <end type="TARGET" refId="17"/>  
-  </generalization>  
-  <generalization id="28">    
-    <end type="SOURCE" refId="3"/>    
-    <end type="TARGET" refId="4"/>  
-  </generalization>  
-  <generalization id="29">    
-    <end type="SOURCE" refId="19"/>    
-    <end type="TARGET" refId="4"/>  
-  </generalization>  
-  <generalization id="30">    
+  <generalization id="19">    
     <end type="SOURCE" refId="11"/>    
     <end type="TARGET" refId="13"/>  
   </generalization>  
-  <generalization id="31">    
-    <end type="SOURCE" refId="12"/>    
-    <end type="TARGET" refId="13"/>  
-  </generalization>  
-  <generalization id="32">    
-    <end type="SOURCE" refId="9"/>    
-    <end type="TARGET" refId="4"/>  
-  </generalization>  
-  <generalization id="33">    
+  <generalization id="20">    
     <end type="SOURCE" refId="2"/>    
     <end type="TARGET" refId="4"/>  
   </generalization>  
-  <generalization id="34">    
-    <end type="SOURCE" refId="20"/>    
+  <generalization id="21">    
+    <end type="SOURCE" refId="13"/>    
+    <end type="TARGET" refId="16"/>  
+  </generalization>  
+  <generalization id="22">    
+    <end type="SOURCE" refId="6"/>    
     <end type="TARGET" refId="1"/>  
   </generalization>  
-  <generalization id="35">    
-    <end type="SOURCE" refId="13"/>    
-    <end type="TARGET" refId="17"/>  
+  <generalization id="23">    
+    <end type="SOURCE" refId="7"/>    
+    <end type="TARGET" refId="1"/>  
   </generalization>  
-  <generalization id="36">    
-    <end type="SOURCE" refId="10"/>    
-    <end type="TARGET" refId="13"/>  
-  </generalization>  
-  <generalization id="37">    
+  <generalization id="24">    
     <end type="SOURCE" refId="8"/>    
     <end type="TARGET" refId="1"/>  
   </generalization>  
-  <generalization id="38">    
-    <end type="SOURCE" refId="4"/>    
-    <end type="TARGET" refId="17"/>  
+  <generalization id="25">    
+    <end type="SOURCE" refId="1"/>    
+    <end type="TARGET" refId="16"/>  
   </generalization>  
-  <generalization id="39">    
-    <end type="SOURCE" refId="16"/>    
+  <generalization id="26">    
+    <end type="SOURCE" refId="9"/>    
+    <end type="TARGET" refId="4"/>  
+  </generalization>  
+  <generalization id="27">    
+    <end type="SOURCE" refId="5"/>    
+    <end type="TARGET" refId="1"/>  
+  </generalization>  
+  <generalization id="28">    
+    <end type="SOURCE" refId="10"/>    
+    <end type="TARGET" refId="13"/>  
+  </generalization>  
+  <generalization id="29">    
+    <end type="SOURCE" refId="18"/>    
+    <end type="TARGET" refId="1"/>  
+  </generalization>  
+  <generalization id="30">    
+    <end type="SOURCE" refId="3"/>    
+    <end type="TARGET" refId="4"/>  
+  </generalization>  
+  <generalization id="31">    
+    <end type="SOURCE" refId="4"/>    
+    <end type="TARGET" refId="16"/>  
+  </generalization>  
+  <generalization id="32">    
+    <end type="SOURCE" refId="14"/>    
+    <end type="TARGET" refId="13"/>  
+  </generalization>  
+  <generalization id="33">    
+    <end type="SOURCE" refId="15"/>    
+    <end type="TARGET" refId="4"/>  
+  </generalization>  
+  <generalization id="34">    
+    <end type="SOURCE" refId="12"/>    
+    <end type="TARGET" refId="13"/>  
+  </generalization>  
+  <generalization id="35">    
+    <end type="SOURCE" refId="17"/>    
     <end type="TARGET" refId="4"/>  
   </generalization>  
   <classifier-display autosize="true" stereotype="true" package="true" initial-value="true" signature="true" 
