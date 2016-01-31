@@ -72,16 +72,16 @@ public class ReconstructArchitecture {
 		// big, though, so be careful if you're taking the brute force approach. This may cause
 		// memory issues.
 
-		int numberOfTopCandidates = 30; // Only relevant for the brute force approach.
-		boolean aggregation = false;
+		int numberOfTopCandidates = 10; // Only relevant for the brute force approach.
+		boolean aggregation = true;
 		boolean remainder = true; // Not relevant for brute force if aggregation = false.
-		int generations = 30; // Only relevant for the genetic approach.
+		int generations = 10; // Only relevant for the genetic approach.
 
 		int numberOfLayers = 3; // Only matters for N-Layered patterns.
 
 		logger.info("Number of rules before applying patterns: " + defineService.getDefinedRules().length);
 		Pattern currentPattern = null;
-		 currentPattern = new LayeredPattern_CompleteFreedom(numberOfLayers);
+		currentPattern = new LayeredPattern_CompleteFreedom(numberOfLayers);
 		// currentPattern = new LayeredPattern_FreeRemainder(numberOfLayers);
 		// currentPattern = new LayeredPattern_IsolatedInternalLayers(numberOfLayers);
 		// currentPattern = new LayeredPattern_LayerTypes(numberOfLayers);
@@ -98,14 +98,14 @@ public class ReconstructArchitecture {
 
 		// currentPattern = new CentralisedLayering();
 		// currentPattern = new Model_Viewcontroller();
-//		currentPattern = new HUSACCT_Analyse();
+		// currentPattern = new HUSACCT_Analyse();
 
 		currentPattern.insertPattern(); // This adds modules and rules (including exceptions if need
 										// be) to the intended architecture.
 		logger.info("Number of rules after applying patterns: " + defineService.getDefinedRules().length);
 		if (currentPattern != null) {
-			 bruteForceApproach(currentPattern, remainder, aggregation, numberOfTopCandidates);
-//			geneticApproach(currentPattern, remainder, generations);
+			// bruteForceApproach(currentPattern, remainder, aggregation, numberOfTopCandidates);
+			geneticApproach(currentPattern, remainder, generations);
 		}
 		System.out.println("Elapsed time: " + ((System.currentTimeMillis() - start) / 1000.0) + " seconds.");
 
